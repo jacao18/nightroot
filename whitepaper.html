@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NIGHTROOT Whitepaper v1.0 — The Forest Remembers</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Space+Grotesk:wght@300;400;500;600&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{--void:#040906;--root:#52f2a5;--relic:#f2c94c;--corrupt:#9a6bff;--ink:#e8f5ec;--mut:#7fa38c;--panel:#0a140d;--line:#173423}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--void);color:var(--ink);font-family:'Space Grotesk',sans-serif;line-height:1.75;font-weight:300}
+::selection{background:var(--root);color:var(--void)}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:2000;opacity:.05;background:repeating-linear-gradient(0deg,#000 0 1px,transparent 1px 3px)}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px clamp(16px,4vw,48px);background:rgba(4,9,6,.8);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.logo{font-family:'Unbounded';font-weight:900;font-size:17px;letter-spacing:.14em;color:var(--root);text-decoration:none}
+.logo em{font-style:normal;color:var(--ink)}
+nav .back{font-size:13px;color:var(--mut);text-decoration:none;letter-spacing:.08em;text-transform:uppercase}
+nav .back:hover{color:var(--root)}
+.wrap{display:grid;grid-template-columns:240px 1fr;gap:60px;max-width:1150px;margin:0 auto;padding:130px clamp(18px,4vw,48px) 100px}
+@media(max-width:880px){.wrap{grid-template-columns:1fr}aside{display:none}}
+aside{position:sticky;top:110px;align-self:start}
+aside .t{font-family:'Press Start 2P';font-size:9px;color:var(--root);margin-bottom:18px}
+aside a{display:block;color:var(--mut);text-decoration:none;font-size:13px;padding:7px 0 7px 14px;border-left:2px solid var(--line);transition:all .2s}
+aside a:hover,aside a.on{color:var(--ink);border-left-color:var(--root)}
+h1{font-family:'Unbounded';font-weight:900;font-size:clamp(30px,5vw,52px);line-height:1.05;text-transform:uppercase;margin:16px 0 10px}
+h1 span{color:var(--root)}
+.vtag{font-family:'Press Start 2P';font-size:9px;color:var(--void);background:var(--root);display:inline-block;padding:8px 12px}
+.date{color:var(--mut);font-size:13px;margin-bottom:56px}
+h2{font-family:'Unbounded';font-weight:800;font-size:clamp(19px,2.6vw,27px);text-transform:uppercase;margin:72px 0 20px;padding-top:24px;border-top:1px solid var(--line);display:flex;gap:14px;align-items:baseline}
+h2 .n{font-family:'Press Start 2P';font-size:11px;color:var(--root)}
+h3{font-family:'Unbounded';font-weight:600;font-size:15px;margin:34px 0 12px;color:var(--root);text-transform:uppercase;letter-spacing:.05em}
+p{color:#b9d4c2;margin-bottom:16px;max-width:70ch}
+p b,li b{color:var(--ink);font-weight:500}
+.callout{border:1px solid var(--line);border-left:3px solid var(--root);background:var(--panel);padding:18px 22px;margin:26px 0;font-size:14.5px}
+.callout.gold{border-left-color:var(--relic)}
+.callout.purple{border-left-color:var(--corrupt)}
+code{font-family:'Press Start 2P';font-size:9px;background:var(--panel);border:1px solid var(--line);padding:4px 8px;color:var(--root)}
+table{width:100%;border-collapse:collapse;margin:26px 0;font-size:14px}
+th{font-family:'Press Start 2P';font-size:8.5px;color:var(--mut);text-align:left;padding:12px 14px;border-bottom:1px solid var(--line)}
+td{padding:13px 14px;border-bottom:1px solid #0e2015;color:#b9d4c2}
+tr:hover td{background:rgba(82,242,165,.03)}
+ul,ol{margin:0 0 18px 22px;color:#b9d4c2}
+li{margin-bottom:8px}
+.formula{font-family:'Press Start 2P';font-size:10px;line-height:2.2;color:var(--root);background:var(--panel);border:1px solid var(--line);padding:20px 24px;margin:24px 0;overflow-x:auto;white-space:nowrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:26px 0}
+@media(max-width:700px){.grid2{grid-template-columns:1fr}}
+.mini{border:1px solid var(--line);background:var(--panel);padding:20px}
+.mini .h{font-family:'Press Start 2P';font-size:9px;color:var(--relic);margin-bottom:12px}
+.mini p{font-size:13px;margin:0}
+footer{border-top:1px solid var(--line);padding:36px;text-align:center;color:#557a63;font-size:12px}
+.c0{color:#9ca3af}.c1{color:#60a5fa}.c2{color:var(--corrupt)}.c3{color:var(--relic)}.cd{color:#f87171}
+</style>
+</head>
+<body>
+<nav>
+ <a class="logo" href="index.html">NIGHT<em>ROOT</em></a>
+ <a class="back" href="index.html">← back to site</a>
+</nav>
+<div class="wrap">
+<aside>
+ <div class="t">CONTENTS</div>
+ <a href="#s1">01 · Abstract</a>
+ <a href="#s2">02 · The World</a>
+ <a href="#s3">03 · Gameplay</a>
+ <a href="#s4">04 · Hero Forging</a>
+ <a href="#s5">05 · $ROOT Token</a>
+ <a href="#s6">06 · Earn & Burn</a>
+ <a href="#s7">07 · Roadmap</a>
+ <a href="#s8">08 · Risk & Legal</a>
+</aside>
+<main>
+ <span class="vtag">WHITEPAPER v1.0 — DEVNET EDITION</span>
+ <h1>NIGHT<span>ROOT</span></h1>
+ <div class="date">The Forest Remembers · July 2026 · nightroot.gg</div>
+
+ <h2 id="s1"><span class="n">01</span> ABSTRACT</h2>
+ <p>NIGHTROOT is a pixel-art survival roguelite built natively on <b>Solana</b>. Players guide heroes through
+  the corrupted Nightwood in runs of escalating intensity, culminating in a confrontation with the world boss
+  <b>Malakhor the Corrupted</b> at the five-minute mark.</p>
+ <p>Its core innovation is <b>signature-forged identity</b>: every playable NFT hero is generated deterministically
+  from the signature of a real on-chain transaction. No off-chain RNG, no reveal servers, no reroll exploits —
+  the chain itself is the forge.</p>
+ <p>The second pillar is an <b>earn economy with teeth</b>. The free starter character, The Drifter, is deliberately
+  frail and earns a symbolic 5% of $ROOT drops. Ownership matters: NFT heroes earn 100%–450% based on rarity,
+  creating a clean, honest split between <i>playing for free</i> and <i>playing for keeps</i>.</p>
+ <div class="callout">NIGHTROOT is currently deployed on <b>Solana devnet</b>. All mints and rewards described here
+  are live in the demo with test SOL and carry no monetary value until the mainnet TGE (Phase III).</div>
+
+ <h2 id="s2"><span class="n">02</span> THE WORLD</h2>
+ <p>Beneath the Nightwood runs the <b>Worldroot</b>, the vein that feeds all living things. Its guardian, Malakhor,
+  bargained with an ancient hunger for power over the root — and was consumed by it. Corrupted, he now drains the
+  Worldroot to break his own chains, and the dying forest answers the only way it can: it plants heroes.</p>
+ <p>Each hero is a <b>seed of the forest's memory</b>, given form by a signature — which is why no two are alike,
+  and why the forest never forgets a fallen one. Runs are stories; scores can be immortalized on-chain.</p>
+
+ <h2 id="s3"><span class="n">03</span> GAMEPLAY</h2>
+ <h3>Core loop</h3>
+ <ul>
+  <li><b>Move, don't aim.</b> Heroes attack automatically; positioning, kiting and pickup routing are the skill ceiling.</li>
+  <li><b>Level blessings.</b> XP seeds drop from every kill. Each level offers 3 choices from a pool of 7 weapons and 7 boons.</li>
+  <li><b>Survive the reckoning.</b> Elites hunt from 1:30. Malakhor rises at 5:00 with ring barrages, charge attacks and minion storms.</li>
+  <li><b>Go endless.</b> Victory unlocks endless mode with escalating boss respawns and elevated $ROOT drops.</li>
+ </ul>
+ <h3>Meta progression</h3>
+ <p>$ROOT earned in runs is spent at the <b>Worldroot Sanctum</b> on five permanent upgrade tracks
+  (damage, vitality, speed, luck, pickup radius). Sanctum spending is the primary token sink — see §06.</p>
+
+ <h2 id="s4"><span class="n">04</span> HERO FORGING (NFT SPEC)</h2>
+ <p>Summoning a hero submits a transaction to Solana. Once confirmed, the <b>base58 transaction signature</b>
+  seeds a deterministic PRNG (xmur3 → sfc32) that forges the hero:</p>
+ <div class="formula">SIG → HASH → { CLASS, RARITY, BONUSES[1+R], PALETTE }</div>
+ <table>
+  <tr><th>ATTRIBUTE</th><th>SPACE</th><th>NOTES</th></tr>
+  <tr><td>Class</td><td>Witch · Hunter · Knight · Mecha</td><td>uniform distribution, defines base weapon & stats</td></tr>
+  <tr><td>Rarity</td><td><span class="c0">Common 60%</span> · <span class="c1">Rare 25%</span> · <span class="c2">Epic 11%</span> · <span class="c3">Legendary 4%</span></td><td>power ×1.00 / ×1.12 / ×1.28 / ×1.50</td></tr>
+  <tr><td>Bonuses</td><td>1 + rarity tier, from 6 stat pools</td><td>magnitude also scales with rarity</td></tr>
+  <tr><td>Palette</td><td>360 hue shifts</td><td>visual identity of the sprite</td></tr>
+ </table>
+ <p>Because the seed is a confirmed signature, forging is <b>publicly verifiable and non-rerollable</b> — anyone can
+  recompute a hero from its transaction. Phase II migrates this into a Metaplex Core collection with the seed
+  preserved as immutable on-chain attribute data.</p>
+ <div class="callout purple"><b>The Drifter.</b> The free starter is intentionally weak: 60 HP, −30% damage, −7% speed,
+  and a 5% earn rate. It exists to let anyone taste the Nightwood — and to make ownership meaningful, not mandatory.</div>
+
+ <h2 id="s5"><span class="n">05</span> $ROOT TOKEN</h2>
+ <p>$ROOT is the single in-game currency and future SPL token of NIGHTROOT. Fixed supply, no inflation, gameplay-gated emission.</p>
+ <table>
+  <tr><th>ALLOCATION</th><th>SHARE</th><th>VESTING</th></tr>
+  <tr><td>Play-to-Earn Rewards</td><td>45%</td><td>emitted only via gameplay, halving yearly</td></tr>
+  <tr><td>Ecosystem Fund</td><td>20%</td><td>DAO-gated from Phase IV</td></tr>
+  <tr><td>Liquidity</td><td>15%</td><td>locked 12 months at TGE</td></tr>
+  <tr><td>Community & Airdrops</td><td>10%</td><td>devnet testers & early guardians rewarded</td></tr>
+  <tr><td>Team</td><td>10%</td><td>24-month linear, 6-month cliff</td></tr>
+ </table>
+ <div class="grid2">
+  <div class="mini"><div class="h">SUPPLY</div><p>1,000,000,000 $ROOT — hard cap, no mint authority after TGE.</p></div>
+  <div class="mini"><div class="h">EMISSION</div><p>Rewards emitted per run are bounded by daily epochs; unclaimed epoch rewards roll into the next season.</p></div>
+ </div>
+
+ <h2 id="s6"><span class="n">06</span> EARN &amp; BURN</h2>
+ <h3>Earning</h3>
+ <div class="formula">EARN = DROPS × RATE(hero) + VICTORY_BONUS × RATE(hero)</div>
+ <table>
+  <tr><th>HERO</th><th>RATE</th><th>EXAMPLE: BOSS KILL (500 base)</th></tr>
+  <tr><td class="cd">The Drifter (free)</td><td class="cd">5%</td><td class="cd">25 $ROOT</td></tr>
+  <tr><td class="c0">Common NFT</td><td>100%</td><td>500 $ROOT</td></tr>
+  <tr><td class="c1">Rare NFT</td><td>160%</td><td>800 $ROOT</td></tr>
+  <tr><td class="c2">Epic NFT</td><td>260%</td><td>1,300 $ROOT</td></tr>
+  <tr><td class="c3">Legendary NFT</td><td>450%</td><td>2,250 $ROOT</td></tr>
+ </table>
+ <h3>Burning</h3>
+ <ul>
+  <li><b>Sanctum upgrades:</b> 50% of every $ROOT spent is burned; 50% recycles into the reward pool.</li>
+  <li><b>Summon fees (mainnet):</b> priced in $ROOT, 70% burned / 30% ecosystem.</li>
+  <li><b>Seasonal resets:</b> leaderboard entry stakes burned for non-finalists.</li>
+ </ul>
+ <div class="callout gold">Design goal: net emissions trend to zero as the player base matures — $ROOT scarcity is
+  earned by the ecosystem, not promised by a chart.</div>
+
+ <h2 id="s7"><span class="n">07</span> ROADMAP</h2>
+ <table>
+  <tr><th>PHASE</th><th>NAME</th><th>DELIVERABLES</th></tr>
+  <tr><td>I ✓</td><td>SEED</td><td>devnet demo, on-chain summons & scores, summon simulator</td></tr>
+  <tr><td>II</td><td>SPROUT</td><td>Metaplex Core collection, marketplace, global leaderboard</td></tr>
+  <tr><td>III</td><td>BLOOM</td><td>mainnet, $ROOT TGE, seasons, hero staking</td></tr>
+  <tr><td>IV</td><td>CANOPY</td><td>PvP Grove Wars, guild raids, mobile, governance</td></tr>
+ </table>
+
+ <h2 id="s8"><span class="n">08</span> RISK &amp; LEGAL</h2>
+ <p>NIGHTROOT is experimental software in active development on a test network. $ROOT currently has
+  <b>no monetary value</b>; devnet assets will not automatically convert to mainnet assets, though early
+  testers are tracked for the community allocation. Nothing in this document constitutes financial advice,
+  an offer of securities, or a promise of future value. Game economies are volatile by nature — play because
+  the forest is fun, not because the token might grow.</p>
+ <p style="margin-top:44px;color:var(--mut)">— The NIGHTROOT team 🌲</p>
+</main>
+</div>
+<footer>NIGHTROOT WHITEPAPER v1.0 · devnet edition · © 2026 — the forest remembers.</footer>
+<script>
+const links=[...document.querySelectorAll('aside a')];
+const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+addEventListener('scroll',()=>{
+ let i=secs.findLastIndex(s=>s.getBoundingClientRect().top<140);
+ links.forEach((a,j)=>a.classList.toggle('on',j===i));
+},{passive:true});
+</script>
+</body>
+</html>

@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NIGHTROOT — Survival Roguelite on Solana | The Forest Remembers</title>
+<meta name="description" content="NIGHTROOT is a pixel-art survival roguelite 100% on Solana. Mint NFT heroes forged by on-chain signatures, survive the corrupted forest, earn $ROOT.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Space+Grotesk:wght@300;400;500;600&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{
+ --void:#040906;
+ --root:#52f2a5;
+ --relic:#f2c94c;
+ --corrupt:#9a6bff;
+ --ink:#e8f5ec;
+ --mut:#7fa38c;
+ --panel:#0a140d;
+ --line:#173423;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--void);color:var(--ink);font-family:'Space Grotesk',sans-serif;overflow-x:hidden;line-height:1.6}
+::selection{background:var(--root);color:var(--void)}
+::-webkit-scrollbar{width:9px}::-webkit-scrollbar-track{background:var(--void)}::-webkit-scrollbar-thumb{background:var(--line);border-radius:9px}
+img,canvas{image-rendering:pixelated}
+a{color:inherit}
+.px{font-family:'Press Start 2P',monospace}
+.disp{font-family:'Unbounded',sans-serif}
+
+/* noise + scanline ambience */
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:2000;opacity:.05;
+ background:repeating-linear-gradient(0deg,#000 0 1px,transparent 1px 3px)}
+
+/* ============ NAV ============ */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+ padding:16px clamp(16px,4vw,48px);background:rgba(4,9,6,.72);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.logo{font-family:'Unbounded';font-weight:900;font-size:19px;letter-spacing:.14em;color:var(--root);
+ text-shadow:0 0 18px rgba(82,242,165,.5);cursor:pointer;position:relative}
+.logo em{font-style:normal;color:var(--ink)}
+.logo:hover{animation:glitch .3s steps(2) infinite}
+@keyframes glitch{0%{transform:translate(0)}25%{transform:translate(-1.5px,1px)}50%{transform:translate(1.5px,-1px)}75%{transform:translate(-1px,-1.5px)}100%{transform:translate(0)}}
+.nav-links{display:flex;gap:26px;align-items:center;font-size:13.5px;font-weight:500;letter-spacing:.06em}
+.nav-links a{text-decoration:none;color:var(--mut);position:relative;transition:color .2s;text-transform:uppercase}
+.nav-links a::after{content:'';position:absolute;left:0;bottom:-5px;width:0;height:1.5px;background:var(--root);transition:width .25s}
+.nav-links a:hover{color:var(--ink)}
+.nav-links a:hover::after{width:100%}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:13px 26px;font-family:'Unbounded';font-weight:600;font-size:12.5px;
+ letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1.5px solid var(--root);color:var(--root);
+ background:transparent;cursor:pointer;position:relative;overflow:hidden;transition:color .25s,box-shadow .25s;white-space:nowrap}
+.btn::before{content:'';position:absolute;inset:0;background:var(--root);transform:translateY(101%);transition:transform .25s;z-index:-1}
+.btn:hover{color:var(--void);box-shadow:0 0 28px rgba(82,242,165,.45)}
+.btn:hover::before{transform:translateY(0)}
+.btn.solid{background:var(--root);color:var(--void)}
+.btn.solid::before{background:var(--relic)}
+.btn.gold{border-color:var(--relic);color:var(--relic)}
+.btn.gold::before{background:var(--relic)}
+.btn.purple{border-color:var(--corrupt);color:var(--corrupt)}
+.btn.purple::before{background:var(--corrupt)}
+.burger{display:none;background:none;border:none;color:var(--root);font-size:22px;cursor:pointer}
+@media(max-width:920px){.nav-links{display:none}.burger{display:block}}
+
+/* ============ HERO ============ */
+header{position:relative;min-height:100svh;display:flex;align-items:center;justify-content:center;text-align:center}
+#forest{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+header::after{content:'';position:absolute;inset:0;z-index:1;
+ background:radial-gradient(ellipse at 50% 62%,transparent 0%,rgba(4,9,6,.55) 58%,var(--void) 100%)}
+.hero-in{position:relative;z-index:5;padding:110px 20px 70px;max-width:1000px}
+.tag{display:inline-block;font-family:'Press Start 2P';font-size:10px;color:var(--root);
+ border:1px solid var(--line);background:rgba(10,20,13,.8);padding:11px 18px;letter-spacing:.1em;margin-bottom:30px;
+ box-shadow:0 0 24px rgba(82,242,165,.15)}
+.tag .dot{display:inline-block;width:8px;height:8px;background:var(--root);margin-right:10px;animation:blink 1.2s steps(2) infinite}
+@keyframes blink{50%{opacity:.15}}
+h1{font-family:'Unbounded';font-weight:900;font-size:clamp(40px,8.5vw,104px);line-height:1.02;letter-spacing:-.01em;
+ text-transform:uppercase}
+h1 .l1{display:block;color:var(--ink)}
+h1 .l2{display:block;color:transparent;-webkit-text-stroke:1.5px var(--root);text-shadow:0 0 40px rgba(82,242,165,.35)}
+.hero-sub{max-width:600px;margin:28px auto 40px;color:var(--mut);font-size:clamp(15px,1.6vw,18px);font-weight:300}
+.hero-sub b{color:var(--ink);font-weight:500}
+.hero-cta{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.hero-stats{display:flex;gap:0;justify-content:center;margin-top:64px;flex-wrap:wrap}
+.hstat{padding:10px 28px;border-right:1px solid var(--line);text-align:center}
+.hstat:last-child{border-right:none}
+.hstat .n{font-family:'Unbounded';font-weight:800;font-size:clamp(18px,2.4vw,26px);color:var(--root)}
+.hstat .t{font-size:11px;color:var(--mut);letter-spacing:.18em;text-transform:uppercase;margin-top:4px}
+/* entrance */
+.hero-in>*{opacity:0;transform:translateY(26px);animation:up .8s cubic-bezier(.2,.7,.3,1) forwards}
+.hero-in>*:nth-child(2){animation-delay:.12s}.hero-in>*:nth-child(3){animation-delay:.24s}
+.hero-in>*:nth-child(4){animation-delay:.36s}.hero-in>*:nth-child(5){animation-delay:.5s}
+@keyframes up{to{opacity:1;transform:none}}
+.scroll-hint{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);z-index:5;color:var(--mut);font-size:11px;
+ letter-spacing:.3em;text-transform:uppercase;animation:hint 2s ease-in-out infinite}
+@keyframes hint{50%{transform:translate(-50%,8px);opacity:.4}}
+
+/* ============ TICKER ============ */
+.ticker{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel);overflow:hidden;padding:14px 0}
+.ticker-in{display:flex;gap:48px;white-space:nowrap;animation:tick 26s linear infinite;width:max-content}
+.ticker-in span{font-family:'Press Start 2P';font-size:10px;color:var(--mut)}
+.ticker-in span b{color:var(--root)}
+@keyframes tick{to{transform:translateX(-50%)}}
+
+/* ============ SECTIONS ============ */
+section{padding:clamp(70px,9vw,130px) clamp(18px,5vw,64px);max-width:1240px;margin:0 auto;position:relative}
+.eyebrow{font-family:'Press Start 2P';font-size:10px;color:var(--root);letter-spacing:.12em;margin-bottom:18px;display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:'';width:34px;height:2px;background:var(--root)}
+h2{font-family:'Unbounded';font-weight:800;font-size:clamp(26px,4.4vw,50px);line-height:1.1;text-transform:uppercase;margin-bottom:20px}
+h2 .alt{color:var(--corrupt)}
+h2 .gold{color:var(--relic)}
+.lead{color:var(--mut);max-width:640px;font-size:clamp(14.5px,1.5vw,17px);font-weight:300}
+.lead b{color:var(--ink);font-weight:500}
+.reveal{opacity:0;transform:translateY(36px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.3,1)}
+.reveal.visible{opacity:1;transform:none}
+
+/* story */
+.story-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center;margin-top:40px}
+@media(max-width:880px){.story-grid{grid-template-columns:1fr}}
+.boss-frame{position:relative;display:flex;align-items:center;justify-content:center;padding:44px;
+ border:1px solid var(--line);background:radial-gradient(ellipse at center,rgba(154,107,255,.12),transparent 70%),var(--panel)}
+.boss-frame canvas{width:min(260px,60vw);filter:drop-shadow(0 0 34px rgba(154,107,255,.55))}
+.boss-frame .bn{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-family:'Press Start 2P';font-size:9px;color:var(--corrupt)}
+.corner{position:absolute;width:14px;height:14px;border:2px solid var(--corrupt)}
+.corner.tl{top:-2px;left:-2px;border-right:none;border-bottom:none}
+.corner.tr{top:-2px;right:-2px;border-left:none;border-bottom:none}
+.corner.bl{bottom:-2px;left:-2px;border-right:none;border-top:none}
+.corner.br{bottom:-2px;right:-2px;border-left:none;border-top:none}
+.story-txt p{color:var(--mut);margin-bottom:18px;font-weight:300}
+.story-txt p b{color:var(--ink);font-weight:500}
+.story-txt .px-quote{font-family:'Press Start 2P';font-size:11px;line-height:2.1;color:var(--root);border-left:3px solid var(--root);
+ padding:6px 0 6px 20px;margin:26px 0}
+
+/* features */
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:48px}
+.feat{border:1px solid var(--line);background:var(--panel);padding:30px 26px;position:relative;overflow:hidden;transition:transform .25s,border-color .25s,box-shadow .25s}
+.feat:hover{transform:translateY(-6px);border-color:var(--root);box-shadow:0 18px 40px -18px rgba(82,242,165,.35)}
+.feat .ic{font-size:26px;margin-bottom:16px}
+.feat h3{font-family:'Unbounded';font-size:15px;font-weight:600;letter-spacing:.04em;margin-bottom:10px;text-transform:uppercase}
+.feat p{font-size:13.5px;color:var(--mut);font-weight:300}
+.feat::after{content:'';position:absolute;top:0;right:0;width:44px;height:44px;
+ background:linear-gradient(225deg,rgba(82,242,165,.14),transparent 60%)}
+
+/* heroes */
+.hero-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:48px}
+.hcard{border:1px solid var(--line);background:var(--panel);padding:26px 22px;text-align:center;position:relative;transition:transform .25s,border-color .25s,box-shadow .25s}
+.hcard:hover{transform:translateY(-8px);border-color:var(--root);box-shadow:0 22px 48px -18px rgba(82,242,165,.4)}
+.hcard canvas{width:112px;height:128px;margin-bottom:14px}
+.hcard h3{font-family:'Unbounded';font-weight:700;font-size:17px;letter-spacing:.08em}
+.hcard .role{font-family:'Press Start 2P';font-size:8px;color:var(--root);margin:10px 0 18px}
+.statbar{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:11px;color:var(--mut)}
+.statbar .lbl{width:38px;text-align:left;letter-spacing:.08em}
+.statbar .bar{flex:1;height:5px;background:#0f1f14;overflow:hidden}
+.statbar .fill{height:100%;background:var(--root);width:0;transition:width .9s cubic-bezier(.2,.7,.3,1)}
+.hcard.drifter{border-style:dashed;border-color:#3a2a2a}
+.hcard.drifter:hover{border-color:#f87171;box-shadow:0 22px 48px -18px rgba(248,113,113,.35)}
+.hcard.drifter .role{color:#f87171}
+.hcard .earn{margin-top:16px;font-family:'Press Start 2P';font-size:8.5px;padding:9px 6px;border:1px solid var(--line)}
+.earn.good{color:var(--relic);border-color:#4a3a10}
+.earn.bad{color:#f87171;border-color:#3a1c1c}
+
+/* rarity table */
+.rtable{width:100%;border-collapse:collapse;margin-top:52px;font-size:14px}
+.rtable th{font-family:'Press Start 2P';font-size:9px;color:var(--mut);text-align:left;padding:14px 16px;border-bottom:1px solid var(--line);letter-spacing:.1em}
+.rtable td{padding:16px;border-bottom:1px solid #0e2015}
+.rtable tr{transition:background .2s}
+.rtable tbody tr:hover{background:rgba(82,242,165,.04)}
+.rr{font-family:'Unbounded';font-weight:700;font-size:13px;letter-spacing:.06em}
+.rr.c0{color:#9ca3af}.rr.c1{color:#4ade80}.rr.c2{color:#60a5fa}.rr.c3{color:#22d3ee}.rr.c4{color:var(--corrupt)}.rr.c5{color:var(--relic);text-shadow:0 0 12px rgba(242,201,76,.5)}.rr.cd{color:#f87171}
+.oddbar{height:6px;background:#0f1f14;max-width:180px}
+.oddbar i{display:block;height:100%;background:currentColor}
+.rt-earn{font-family:'Press Start 2P';font-size:10px}
+
+/* summon simulator */
+.sim-wrap{border:1px solid var(--line);background:
+ radial-gradient(ellipse at 50% 0%,rgba(154,107,255,.1),transparent 60%),var(--panel);
+ padding:clamp(34px,5vw,64px);text-align:center;position:relative;margin-top:48px}
+.sim-stage{min-height:330px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.sim-idle{color:var(--mut);font-size:14px;max-width:420px}
+.sim-portal{width:120px;height:120px;border:2px solid var(--corrupt);transform:rotate(45deg);display:flex;align-items:center;justify-content:center;
+ box-shadow:0 0 40px rgba(154,107,255,.35),inset 0 0 30px rgba(154,107,255,.2);animation:spinP 7s linear infinite;margin:20px 0}
+.sim-portal span{transform:rotate(-45deg);font-size:38px}
+@keyframes spinP{to{transform:rotate(405deg)}}
+.sim-portal.charging{animation:spinP 0.6s linear infinite;border-color:var(--root);box-shadow:0 0 70px rgba(82,242,165,.6),inset 0 0 40px rgba(82,242,165,.35)}
+.sim-card{width:230px;border:1.5px solid var(--line);background:#07110b;padding:22px 18px;animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{0%{transform:scale(.4) rotate(-4deg);opacity:0}100%{transform:none;opacity:1}}
+.sim-card canvas{width:98px;height:112px}
+.sim-card .snm{font-family:'Unbounded';font-weight:700;font-size:14px;margin-top:10px}
+.sim-card .srar{font-family:'Press Start 2P';font-size:9px;margin:10px 0}
+.sim-card .sbon{font-size:12px;color:var(--mut);line-height:1.8}
+.sim-card.g0{border-color:#9ca3af}
+.sim-card.g1{border-color:#4ade80;box-shadow:0 0 28px rgba(74,222,128,.3)}
+.sim-card.g2{border-color:#60a5fa;box-shadow:0 0 34px rgba(96,165,250,.35)}
+.sim-card.g3{border-color:#22d3ee;box-shadow:0 0 40px rgba(34,211,238,.45)}
+.sim-card.g4{border-color:var(--corrupt);box-shadow:0 0 44px rgba(154,107,255,.5)}
+.sim-card.g5{border-color:var(--relic);box-shadow:0 0 60px rgba(242,201,76,.6);animation:pop .5s cubic-bezier(.2,1.4,.4,1),leggl 1.6s ease-in-out infinite .5s}
+@keyframes leggl{50%{box-shadow:0 0 90px rgba(242,201,76,.9)}}
+.sim-count{font-size:12px;color:var(--mut);margin-top:18px}
+.sim-note{font-size:11.5px;color:var(--mut);opacity:.7;margin-top:10px}
+
+/* tokenomics */
+.tok-grid{display:grid;grid-template-columns:380px 1fr;gap:56px;align-items:center;margin-top:48px}
+@media(max-width:920px){.tok-grid{grid-template-columns:1fr}}
+.donut-wrap{position:relative;display:flex;align-items:center;justify-content:center}
+.donut-wrap svg{width:100%;max-width:360px;transform:rotate(-90deg)}
+.donut-wrap circle{fill:none;stroke-width:26;stroke-dasharray:0 999;transition:stroke-dasharray 1.2s cubic-bezier(.2,.7,.3,1)}
+.donut-c{position:absolute;text-align:center}
+.donut-c .s{font-family:'Unbounded';font-weight:800;font-size:26px;color:var(--root)}
+.donut-c .t{font-size:11px;color:var(--mut);letter-spacing:.2em;text-transform:uppercase}
+.tok-list{display:flex;flex-direction:column;gap:14px}
+.tok-item{display:flex;align-items:center;gap:16px;padding:15px 18px;border:1px solid var(--line);background:var(--panel);transition:transform .2s,border-color .2s}
+.tok-item:hover{transform:translateX(8px);border-color:var(--root)}
+.tok-item .sw{width:13px;height:13px;flex-shrink:0}
+.tok-item .nm{flex:1;font-size:14px}
+.tok-item .pc{font-family:'Unbounded';font-weight:700;font-size:15px}
+.tok-item .ds{font-size:11.5px;color:var(--mut)}
+.loop{display:flex;gap:0;justify-content:center;flex-wrap:wrap;margin-top:64px;align-items:stretch}
+.loop .st{border:1px solid var(--line);background:var(--panel);padding:22px 26px;text-align:center;min-width:150px;flex:1;max-width:220px}
+.loop .st .px2{font-family:'Press Start 2P';font-size:9px;color:var(--root);display:block;margin-bottom:10px}
+.loop .st p{font-size:12px;color:var(--mut)}
+.loop .ar{display:flex;align-items:center;padding:0 12px;color:var(--root);font-size:20px}
+@media(max-width:760px){.loop .ar{transform:rotate(90deg);justify-content:center;width:100%;padding:6px 0}}
+
+/* roadmap */
+.phases{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:48px}
+.phase{border:1px solid var(--line);background:var(--panel);padding:28px 24px;position:relative}
+.phase .ph{font-family:'Press Start 2P';font-size:9px;color:var(--void);background:var(--root);display:inline-block;padding:7px 12px;margin-bottom:18px}
+.phase.dim .ph{background:var(--line);color:var(--mut)}
+.phase h3{font-family:'Unbounded';font-size:15px;font-weight:600;margin-bottom:14px;text-transform:uppercase}
+.phase ul{list-style:none}
+.phase li{font-size:13px;color:var(--mut);padding:7px 0 7px 22px;position:relative;border-bottom:1px dashed #10241740}
+.phase li::before{content:'▸';position:absolute;left:0;color:var(--root)}
+.phase li.done::before{content:'✓'}
+.phase li.done{color:var(--ink)}
+
+/* whitepaper cta */
+.wp-band{border:1px solid var(--line);background:linear-gradient(120deg,rgba(82,242,165,.07),rgba(154,107,255,.07)),var(--panel);
+ padding:clamp(36px,5vw,60px);display:flex;gap:36px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:20px}
+.wp-band h3{font-family:'Unbounded';font-weight:800;font-size:clamp(20px,3vw,30px);text-transform:uppercase;line-height:1.15}
+.wp-band p{color:var(--mut);margin-top:10px;max-width:480px;font-weight:300}
+
+/* faq */
+.faq{margin-top:44px;border-top:1px solid var(--line)}
+.qa{border-bottom:1px solid var(--line)}
+.qa button{width:100%;background:none;border:none;color:var(--ink);font-family:'Space Grotesk';font-size:16px;font-weight:500;
+ text-align:left;padding:24px 8px;cursor:pointer;display:flex;justify-content:space-between;gap:20px;align-items:center}
+.qa button:hover{color:var(--root)}
+.qa .pm{font-family:'Press Start 2P';font-size:12px;color:var(--root);transition:transform .25s}
+.qa.open .pm{transform:rotate(45deg)}
+.qa .ans{max-height:0;overflow:hidden;transition:max-height .35s ease;color:var(--mut);font-weight:300;font-size:14.5px}
+.qa .ans div{padding:0 8px 24px;max-width:760px}
+.qa .ans b{color:var(--ink)}
+
+/* footer */
+footer{border-top:1px solid var(--line);padding:56px clamp(18px,5vw,64px) 40px;background:var(--panel)}
+.foot-in{max-width:1240px;margin:0 auto;display:flex;justify-content:space-between;gap:32px;flex-wrap:wrap}
+.foot-in .fl{max-width:340px}
+.foot-links{display:flex;gap:56px;flex-wrap:wrap}
+.foot-links h4{font-family:'Press Start 2P';font-size:9px;color:var(--root);margin-bottom:16px}
+.foot-links a{display:block;color:var(--mut);text-decoration:none;font-size:13.5px;padding:5px 0;transition:color .2s}
+.foot-links a:hover{color:var(--ink)}
+.legal{max-width:1240px;margin:44px auto 0;padding-top:22px;border-top:1px solid var(--line);font-size:11.5px;color:#557a63;line-height:1.9}
+.mnav{position:fixed;inset:0;background:rgba(4,9,6,.97);z-index:99;display:none;flex-direction:column;align-items:center;justify-content:center;gap:30px}
+.mnav.open{display:flex}
+.mnav a{font-family:'Unbounded';font-size:20px;color:var(--ink);text-decoration:none;text-transform:uppercase}
+
+/* scroll progress */
+#sprog{position:fixed;top:0;left:0;height:2.5px;width:0;background:linear-gradient(90deg,var(--root),var(--relic));z-index:200;box-shadow:0 0 12px rgba(82,242,165,.7)}
+/* spore cursor trail */
+#spores{position:fixed;inset:0;pointer-events:none;z-index:1500}
+/* card 3D tilt */
+.hcard,.feat{transform-style:preserve-3d;will-change:transform}
+/* brutality band */
+.brutal{border:1px solid #3a1c1c;background:linear-gradient(120deg,rgba(239,68,68,.08),transparent 60%),var(--panel);
+ padding:clamp(30px,4vw,48px);margin-top:56px;display:flex;gap:34px;align-items:center;justify-content:space-between;flex-wrap:wrap;position:relative;overflow:hidden}
+.brutal::before{content:'☠';position:absolute;right:-10px;bottom:-30px;font-size:150px;opacity:.05}
+.brutal h3{font-family:'Unbounded';font-weight:800;font-size:clamp(19px,2.8vw,28px);text-transform:uppercase;color:#f87171;line-height:1.2}
+.brutal p{color:var(--mut);margin-top:10px;max-width:560px;font-weight:300}
+.brutal .bstats{display:flex;gap:26px;flex-wrap:wrap}
+.brutal .bstat{text-align:center}
+.brutal .bstat .n{font-family:'Press Start 2P';font-size:15px;color:#f87171}
+.brutal .bstat .t{font-size:10.5px;color:var(--mut);letter-spacing:.14em;text-transform:uppercase;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="sprog"></div>
+<canvas id="spores"></canvas>
+
+<nav>
+ <div class="logo" onclick="location.href='#top'">NIGHT<em>ROOT</em></div>
+ <div class="nav-links">
+  <a href="#story">Story</a><a href="#heroes">Heroes</a><a href="#summon">Summon</a>
+  <a href="#root">$ROOT</a><a href="#roadmap">Roadmap</a><a href="whitepaper.html">Whitepaper</a>
+ </div>
+ <div style="display:flex;gap:12px;align-items:center">
+  <a class="btn solid" href="NIGHTROOT.html">▶ Play Demo</a>
+  <button class="burger" onclick="document.querySelector('.mnav').classList.toggle('open')">☰</button>
+ </div>
+</nav>
+<div class="mnav" onclick="this.classList.remove('open')">
+ <a href="#story">Story</a><a href="#heroes">Heroes</a><a href="#summon">Summon</a>
+ <a href="#root">$ROOT</a><a href="#roadmap">Roadmap</a><a href="whitepaper.html">Whitepaper</a>
+ <a href="NIGHTROOT.html" style="color:var(--root)">▶ Play Demo</a>
+</div>
+
+<header id="top">
+ <canvas id="forest"></canvas>
+ <div class="hero-in">
+  <div class="tag"><span class="dot"></span>LIVE ON SOLANA DEVNET</div>
+  <h1><span class="l1">THE FOREST</span><span class="l2">REMEMBERS.</span></h1>
+  <p class="hero-sub">A pixel-art survival roguelite where every hero is <b>forged by an on-chain signature</b>.
+   Survive the corrupted woods, face <b>Malakhor</b> at minute five, and earn <b>$ROOT</b> — if your hero is worthy.</p>
+  <div class="hero-cta">
+   <a class="btn solid" href="NIGHTROOT.html">▶ Play Free Demo</a>
+   <a class="btn purple" href="#summon">⬢ Try a Summon</a>
+   <a class="btn" href="whitepaper.html">Whitepaper</a>
+  </div>
+  <div class="hero-stats">
+   <div class="hstat"><div class="n">10</div><div class="t">Classes</div></div>
+   <div class="hstat"><div class="n">27</div><div class="t">Enemy breeds</div></div>
+   <div class="hstat"><div class="n">450%</div><div class="t">Max $ROOT rate</div></div>
+   <div class="hstat"><div class="n" style="color:#f87171">BRUTAL</div><div class="t">Difficulty</div></div>
+  </div>
+ </div>
+ <div class="scroll-hint">▼ descend</div>
+</header>
+
+<div class="ticker"><div class="ticker-in" id="ticker">
+ <span>◆ <b>$ROOT</b> IS EARNED, NEVER GIVEN</span><span>◆ MALAKHOR AWAKENS AT <b>5:00</b></span>
+ <span>◆ EVERY MINT IS AN <b>ON-CHAIN SIGNATURE</b></span><span>◆ LEGENDARY ODDS: <b>3%</b></span>
+ <span>◆ <b>10 CLASSES</b> · <b>6 RARITIES</b> · <b>27 BREEDS</b></span><span>◆ NFT HEROES GET <b>SECOND ROOT</b></span>
+ <span>◆ YOU WILL DIE. <b>OFTEN.</b></span><span>◆ HORDES SURGE EVERY <b>40 SECONDS</b></span>
+ <span>◆ THE DRIFTER EARNS <b>ALMOST NOTHING</b></span><span>◆ SURVIVE · SUMMON · <b>EARN</b></span>
+</div></div>
+
+<section id="story">
+ <div class="reveal">
+  <div class="eyebrow">CHAPTER 00 — THE CORRUPTION</div>
+  <h2>ONE ROOT HOLDS<br>THE WORLD. <span class="alt">HE WANTS IT.</span></h2>
+ </div>
+ <div class="story-grid">
+  <div class="story-txt reveal">
+   <p>Beneath the Nightwood lies the <b>Worldroot</b> — the ancient vein that feeds every living thing.
+    Its keeper, <b>Malakhor</b>, traded his soul for power and was devoured by it. Now he drains the root dry,
+    and the forest sends its last seeds to fight back.</p>
+   <p>You are one of those seeds. A hero summoned by a <b>cryptographic signature</b>, unique and unrepeatable,
+    burned into Solana forever. Your class, your rarity, your gifts — the chain decides. The forest remembers.</p>
+   <div class="px-quote">"AT THE FIFTH MINUTE,<br>THE WOODS GO QUIET.<br>THEN HE COMES."</div>
+   <p>Hordes surge in waves. Spitters snipe, wraiths phase through the pack, elites hunt with 8× HP.
+    Choose your blessings wisely — when Malakhor rises, only a sharpened build survives the reckoning.
+    Slay him and the <b>ENDLESS MODE</b> begins. Most won't.</p>
+  </div>
+  <div class="boss-frame reveal">
+   <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+   <canvas id="bossCv"></canvas>
+   <div class="bn">MALAKHOR THE CORRUPTED — WORLD BOSS</div>
+  </div>
+ </div>
+ <div class="feat-grid">
+  <div class="feat reveal"><div class="ic">⚔️</div><h3>Auto-battle chaos</h3><p>Your hero fights on their own — you steer, dodge, and shape the build. Pure flow-state survival.</p></div>
+  <div class="feat reveal"><div class="ic">✨</div><h3>Blessing builds</h3><p>Level up and pick from 13 weapons and 9 boons. Stack chain lightning, blood daggers, frost shards and rootquakes into broken combos.</p></div>
+  <div class="feat reveal"><div class="ic">☠️</div><h3>The 5:00 reckoning</h3><p>Malakhor is not a wall — he is an execution. Bullet rings, aimed volleys, 340-speed charges, minion storms — and below 30% HP, he <b style="color:#f87171">enrages</b>.</p></div>
+  <div class="feat reveal"><div class="ic">♾️</div><h3>Endless mode</h3><p>Victory unlocks the true grind: escalating bosses every 75s, elite storms and the $ROOT flywheel.</p></div>
+ </div>
+ <div class="brutal reveal">
+  <div>
+   <h3>The forest does not<br>want you to win.</h3>
+   <p>Hordes surge every 40 seconds. <b>Spitters</b> snipe from outside your reach. <b>Wraiths</b> phase straight through the swarm.
+    Elites carry 8× HP and hit for 2.2×. Healing is a rumor. This is a roguelite for players who think they're good — the Nightwood disagrees.</p>
+  </div>
+  <div class="bstats">
+   <div class="bstat"><div class="n">27</div><div class="t">enemy breeds</div></div>
+   <div class="bstat"><div class="n">40s</div><div class="t">horde surges</div></div>
+   <div class="bstat"><div class="n">8×</div><div class="t">elite HP</div></div>
+   <div class="bstat"><div class="n">30%</div><div class="t">boss enrage</div></div>
+  </div>
+ </div>
+</section>
+
+<section id="heroes">
+ <div class="reveal">
+  <div class="eyebrow">THE VAULT — NFT HEROES</div>
+  <h2>YOUR SIGNATURE.<br><span class="gold">YOUR HERO.</span></h2>
+  <p class="lead">Each summon sends a real transaction on Solana devnet. The signature is hashed into your hero's
+   <b>class (10), rarity (6), bonuses and colors</b>. No two are alike — and only NFT heroes truly earn <b>$ROOT</b>.
+   Every NFT hero also fights with <b style="color:#4ade80">+20% damage, +15% HP</b> and <b style="color:#4ade80">SECOND ROOT</b>:
+   one free revive per run. The Nightwood stays brutal — but a summoned hero has teeth.</p>
+ </div>
+ <div class="hero-grid" id="heroGrid"></div>
+ <div class="reveal">
+ <table class="rtable">
+  <thead><tr><th>RARITY</th><th>SUMMON ODDS</th><th>POWER</th><th>$ROOT EARN RATE</th></tr></thead>
+  <tbody>
+   <tr><td><span class="rr cd">DRIFTER (free)</span></td><td>— not an NFT</td><td>weak · −30% dmg · 60 HP · no revive</td><td class="rt-earn" style="color:#f87171">5%</td></tr>
+   <tr><td><span class="rr c0">COMMON</span></td><td><div class="oddbar" style="color:#9ca3af"><i style="width:40%"></i></div>40%</td><td>×1.00</td><td class="rt-earn" style="color:#9ca3af">100%</td></tr>
+   <tr><td><span class="rr c1">UNCOMMON</span></td><td><div class="oddbar" style="color:#4ade80"><i style="width:25%"></i></div>25%</td><td>×1.12</td><td class="rt-earn" style="color:#4ade80">130%</td></tr>
+   <tr><td><span class="rr c2">RARE</span></td><td><div class="oddbar" style="color:#60a5fa"><i style="width:16%"></i></div>16%</td><td>×1.25</td><td class="rt-earn" style="color:#60a5fa">170%</td></tr>
+   <tr><td><span class="rr c3">SUPER RARE</span></td><td><div class="oddbar" style="color:#22d3ee"><i style="width:10%"></i></div>10%</td><td>×1.40</td><td class="rt-earn" style="color:#22d3ee">220%</td></tr>
+   <tr><td><span class="rr c4">EPIC</span></td><td><div class="oddbar" style="color:#9a6bff"><i style="width:6%"></i></div>6%</td><td>×1.60</td><td class="rt-earn" style="color:#9a6bff">300%</td></tr>
+   <tr><td><span class="rr c5">LEGENDARY</span></td><td><div class="oddbar" style="color:#f2c94c"><i style="width:3%"></i></div>3%</td><td>×1.85</td><td class="rt-earn" style="color:#f2c94c">450%</td></tr>
+  </tbody>
+ </table>
+ </div>
+</section>
+
+<section id="summon">
+ <div class="reveal">
+  <div class="eyebrow">SUMMON SIMULATOR</div>
+  <h2>TEST YOUR <span class="alt">LUCK.</span></h2>
+  <p class="lead">This simulator uses the <b>exact live odds</b> of the game. Real summons are minted in-game
+   through your Phantom wallet on devnet — this is the fate that could await you.</p>
+ </div>
+ <div class="sim-wrap reveal">
+  <div class="sim-stage" id="simStage">
+   <div class="sim-idle">The portal is dormant. Feed it a signature.</div>
+   <div class="sim-portal" id="simPortal"><span>⬢</span></div>
+  </div>
+  <button class="btn purple" id="simBtn" onclick="simSummon()">⬢ SIMULATE SUMMON</button>
+  <div class="sim-count" id="simCount"></div>
+  <div class="sim-note">simulation only — no wallet needed, nothing is minted</div>
+ </div>
+</section>
+
+<section id="root">
+ <div class="reveal">
+  <div class="eyebrow">TOKENOMICS</div>
+  <h2>THE <span class="gold">$ROOT</span> ECONOMY</h2>
+  <p class="lead">$ROOT is the lifeblood of the Nightwood. It is <b>earned by surviving</b>, multiplied by hero rarity,
+   and burned into permanent power at the Sanctum. Fixed supply: <b>1,000,000,000 $ROOT</b>.</p>
+ </div>
+ <div class="tok-grid">
+  <div class="donut-wrap reveal">
+   <svg viewBox="0 0 200 200">
+    <circle cx="100" cy="100" r="80" stroke="#52f2a5" data-p="45"/>
+    <circle cx="100" cy="100" r="80" stroke="#9a6bff" data-p="20" data-o="45"/>
+    <circle cx="100" cy="100" r="80" stroke="#f2c94c" data-p="15" data-o="65"/>
+    <circle cx="100" cy="100" r="80" stroke="#60a5fa" data-p="10" data-o="80"/>
+    <circle cx="100" cy="100" r="80" stroke="#3a5a47" data-p="10" data-o="90"/>
+   </svg>
+   <div class="donut-c"><div class="s">1B</div><div class="t">fixed supply</div></div>
+  </div>
+  <div class="tok-list">
+   <div class="tok-item reveal"><span class="sw" style="background:#52f2a5"></span><span class="nm">Play-to-Earn Rewards<div class="ds">emitted only through gameplay, scaled by rarity</div></span><span class="pc">45%</span></div>
+   <div class="tok-item reveal"><span class="sw" style="background:#9a6bff"></span><span class="nm">Ecosystem Fund<div class="ds">events, tournaments, partner quests</div></span><span class="pc">20%</span></div>
+   <div class="tok-item reveal"><span class="sw" style="background:#f2c94c"></span><span class="nm">Liquidity<div class="ds">DEX pools, locked at TGE</div></span><span class="pc">15%</span></div>
+   <div class="tok-item reveal"><span class="sw" style="background:#60a5fa"></span><span class="nm">Community & Airdrops<div class="ds">early guardians, devnet testers</div></span><span class="pc">10%</span></div>
+   <div class="tok-item reveal"><span class="sw" style="background:#3a5a47"></span><span class="nm">Team<div class="ds">24-month linear vesting, 6-month cliff</div></span><span class="pc">10%</span></div>
+  </div>
+ </div>
+ <div class="loop reveal">
+  <div class="st"><span class="px2">SUMMON</span><p>mint an NFT hero — the chain forges its fate</p></div>
+  <div class="ar">→</div>
+  <div class="st"><span class="px2">SURVIVE</span><p>fight the Nightwood, slay Malakhor</p></div>
+  <div class="ar">→</div>
+  <div class="st"><span class="px2">EARN</span><p>$ROOT drops scale with rarity — up to 450%</p></div>
+  <div class="ar">→</div>
+  <div class="st"><span class="px2">BURN</span><p>Sanctum upgrades burn 50% of spent $ROOT</p></div>
+ </div>
+</section>
+
+<section id="roadmap">
+ <div class="reveal">
+  <div class="eyebrow">ROADMAP</div>
+  <h2>THE PATH OF <span class="alt">THE ROOT</span></h2>
+ </div>
+ <div class="phases">
+  <div class="phase reveal"><span class="ph">PHASE I — SEED</span><h3>Devnet Genesis</h3><ul>
+   <li class="done">Playable demo — full gameplay loop</li><li class="done">On-chain summons (devnet)</li>
+   <li class="done">On-chain score records</li><li class="done">Summon simulator</li></ul></div>
+  <div class="phase reveal"><span class="ph">PHASE II — SPROUT</span><h3>The Vault Opens</h3><ul>
+   <li>Metaplex Core NFT collection</li><li>Hero marketplace listings</li>
+   <li>Global on-chain leaderboard</li><li>Community events & whitelists</li></ul></div>
+  <div class="phase reveal dim"><span class="ph">PHASE III — BLOOM</span><h3>Mainnet & $ROOT TGE</h3><ul>
+   <li>$ROOT token generation event</li><li>Mainnet hero mints</li>
+   <li>Seasonal bosses & biomes</li><li>Staking: root your heroes</li></ul></div>
+  <div class="phase reveal dim"><span class="ph">PHASE IV — CANOPY</span><h3>The Living Forest</h3><ul>
+   <li>PvP: Grove Wars</li><li>Guild raids on world bosses</li>
+   <li>Mobile release</li><li>Community governance</li></ul></div>
+ </div>
+ <div class="wp-band reveal">
+  <div><h3>Read the full<br>Whitepaper</h3><p>Lore, game systems, NFT forging spec, $ROOT emissions math, burn sinks and the road to mainnet — all documented.</p></div>
+  <a class="btn gold" href="whitepaper.html">📜 Open Whitepaper</a>
+ </div>
+</section>
+
+<section id="faq">
+ <div class="reveal">
+  <div class="eyebrow">FAQ</div>
+  <h2>QUESTIONS FROM<br>THE UNDERGROWTH</h2>
+ </div>
+ <div class="faq reveal" id="faqList"></div>
+</section>
+
+<footer>
+ <div class="foot-in">
+  <div class="fl">
+   <div class="logo">NIGHT<em>ROOT</em></div>
+   <p style="color:var(--mut);font-size:13px;margin-top:14px;font-weight:300">A survival roguelite rooted in Solana.
+    Every hero is a signature. Every run is a story. The forest remembers.</p>
+  </div>
+  <div class="foot-links">
+   <div><h4>GAME</h4><a href="NIGHTROOT.html">Play Demo</a><a href="#heroes">Heroes</a><a href="#summon">Summon Simulator</a></div>
+   <div><h4>PROTOCOL</h4><a href="#root">Tokenomics</a><a href="whitepaper.html">Whitepaper</a><a href="#roadmap">Roadmap</a></div>
+   <div><h4>COMMUNITY</h4><a href="#">X / Twitter</a><a href="#">Discord</a><a href="#">Telegram</a></div>
+  </div>
+ </div>
+ <div class="legal">NIGHTROOT is currently a devnet demo. $ROOT has no monetary value and NFT summons are recorded on Solana devnet for testing purposes.
+  Nothing on this page is financial advice. Play games, touch grass, water your roots. © 2026 NIGHTROOT.</div>
+</footer>
+
+<script>
+"use strict";
+/* ===== pixel sprite engine (same art as the game) ===== */
+const PAL={F:'#f3c99a',f:'#d19c5f',i:'#22d3ee',H:'#e2e8f0',N:'#365314',n:'#1a2e05',a:'#475569',k:'#0a0a14',W:'#f8fafc',
+ P:'#7c3aed',p:'#5b21b6',C:'#4c1d95',T:'#a78bfa',G:'#9ca3af',g:'#6b7280',B:'#7c4a2d',R:'#3f3f46',M:'#cbd5e1',m:'#94a3b8',
+ V:'#ef4444',A:'#64748b',D:'#fbbf24',E:'#10b981',e:'#047857',v:'#67e8f9',o:'#f97316',x:'#4ade80',q:'#1f2937',Q:'#0f172a',
+ r:'#ef4444',t:'#713f12'};
+const SPR_HERO=[
+ ['.....kkkk.....','....kPPPPk....','...kPpPPPPk...','...kPPPPPPk...','..kPpPPPPPPk..','.kkkkkkkkkkkk.','..kHHFFFFHHk..','..kHFiFFiFHk..','...kFFffFFk...','..kCCCCCCCCk..','.kCCTCCCCTCCk.','.kCCCCCCCCCCk.','.kCCCCCCCCCCk.','..kCCCCCCCCk..','...kCCkkCCk...','...kk....kk...'],
+ ['..kk......kk..','.kGGk....kGGk.','.kGGGkkkkGGGk.','..kGGGGGGGGk..','..kGgGGGGgGk..','..kkFFFFFFkk..','..kFFiFFiFFk..','...kFFffFFk...','..kooooooook..','.kNNNNNNNNNNk.','.kNnNNNNNNnNk.','kRRRRRRRRRRRRk','.kNNNNNNNNNNk.','..kNNNNNNNNk..','...kNNkkNNk...','...kk....kk...'],
+ ['.....kVVk.....','....kVVVVk....','....kMMMMk....','...kMMMMMMk...','..kMmMMMMmMk..','..kMkkkkkkMk..','..kMMMMMMMMk..','...kMMMMMMk...','..kADAAAADAk..','.kAAAAAAAAAAk.','.kAaAADDAAaAk.','.kAAAAAAAAAAk.','..kAAAAAAAAk..','..kAAAAAAAAk..','...kAAkkAAk...','...kk....kk...'],
+ ['......kk......','.....kvvk.....','....kkEEkk....','...kEEEEEEk...','..kEvvvvvvEk..','..kEvkvvkvEk..','...kEEEEEEk...','.kkeEEEEEEekk.','kEEkEEEEEEkEEk','kEekEeeeEEkeEk','.kkkEEEEEEkkk.','..kEEDEEDEEk..','..kEEEEEEEEk..','..keEE..EEek..','..kEEk..kEEk..','..kkk....kkk..'],
+ ['.....qqqq.....','....qQQQQq....','...qQQQQQQq...','..qQQrQQrQQq..','..qQQQQQQQQq..','...qQQQQQQq...','..qqQQQQQQqq..','.qQQQQQQQQQQq.','.qQQMQQQQMQQq.','.qQQQQQQQQQQq.','..qQQQQQQQQq..','..qQQQQQQQQq..','...qQQkkQQq...','...qq....qq...'],
+ ['..t........t..','.tt........tt.','..t..kkkk..t..','...kkFFFFkk...','..kFFiFFiFFk..','...kFFffFFk...','..kEEEEEEEEk..','.kEeEEEEEEeEk.','.kEEEEEEEEEEk.','.kEEeEEEEeEEk.','..kEEEEEEEEk..','..kEEEEEEEEk..','...kEEkkEEk...','...kk....kk...'],
+ ['.....vvvv.....','....kvvvvk....','...kvMMMMvk...','..kMMiMMiMMk..','...kMMffMMk...','..kvvvvvvvvk..','.kvWvvvvvvWvk.','.kvvvvWWvvvvk.','.kvvvvvvvvvvk.','..kvvvvvvvvk..','..kMvvvvvvMk..','...kvvkkvvk...','...kk....kk...'],
+ ['.....oDDo.....','....oDDDDo....','...kDDDDDDk...','...kFFFFFFk...','..kFFiFFiFFk..','...kFFffFFk...','..kooooooook..','.koroooooorok.','.kooooooooook.','..kooooooook..','..kooooooook..','...kookkook...','...kk....kk...'],
+ ['.....kkkk.....','....kUUUUk....','...kUUUUUUk...','..kUDUUUUDUk..','..kFFiFFiFFk..','...kFFffFFk...','..kUUUUUUUUk..','.kUUDUUUUDUUk.','.kUUUDUUDUUUk.','.kUUUUDDUUUUk.','..kUUUUUUUUk..','..kUUUUUUUUk..','...kUUkkUUk...','...kk....kk...'],
+ ['.....kkkk.....','....kQQQQk....','...kQWWWWQk...','..kWWrWWrWWk..','...kWWffWWk...','..kQQQQQQQQk..','.kQVQQQQQQVQk.','.kQQVQQQQVQQk.','.kQQQVQQVQQQk.','.kQQQQVVQQQQk.','..kQQQQQQQQk..','..kQQQQQQQQk..','...kQQkkQQk...','...kk....kk...'],
+];
+const SPR_BOSS=['......DDDDDD......','.....D.QQQQ.D.....','....QQQQQQQQQQ....','...QQqQQQQQQqQQ...','..QQQQrrQQrrQQQQ..','..QQQQrrQQrrQQQQ..','.QQQQQQQQQQQQQQQQ.','.QQxQQQQQQQQQQxQQ.','QQQxxQQQQQQQQxxQQQ','QQQQxQQQxxQQQxQQQQ','QQQQQQQxxxxQQQQQQQ','.QQQQQQxxxxQQQQQQ.','.QQQQQQQxxQQQQQQQ.','..QQQQQQQQQQQQQQ..','..xQQQQQQQQQQQQx..','.xxQQQQ....QQQQxx.','.x.QQQ......QQQ.x.','...QQ........QQ...','...kk........kk...'];
+function makeSpr(rows,hue=0){
+ const H=rows.length,W=rows[0].length,c=document.createElement('canvas');c.width=W;c.height=H;
+ const x=c.getContext('2d');
+ for(let j=0;j<H;j++)for(let i=0;i<W;i++){const ch=rows[j][i];if(ch==='.')continue;const col=PAL[ch];if(!col)continue;x.fillStyle=col;x.fillRect(i,j,1,1)}
+ if(!hue)return c;
+ const c2=document.createElement('canvas');c2.width=W;c2.height=H;const x2=c2.getContext('2d');
+ x2.filter='hue-rotate('+hue+'deg)';x2.drawImage(c,0,0);return c2;
+}
+
+/* ===== hero canvas: parallax nightwood ===== */
+const fc=document.getElementById('forest'),fx=fc.getContext('2d');
+let FW,FH;const DPRS=1;
+function fRes(){FW=fc.width=Math.ceil(innerWidth/3);FH=fc.height=Math.ceil(Math.max(innerHeight,500)/3);fx.imageSmoothingEnabled=false}
+addEventListener('resize',fRes);fRes();
+function h2(x,y){let h=Math.imul(x,374761393)+Math.imul(y,668265263);h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967296}
+const walkers=[0,1,2,3,4,5,6,7,8,9].map((c,i)=>({cls:c,spr:makeSpr(SPR_HERO[c]),x:Math.random()*400,sp:5+Math.random()*4,off:i*90}));
+const flies=Array.from({length:26},()=>({x:Math.random(),y:Math.random(),ph:Math.random()*6.28,sp:.3+Math.random()*.7}));
+function tree(x,gy,s,col){fx.fillStyle=col;
+ fx.fillRect(x-s*.5,gy-s*2.6,s,s*2.6);
+ for(let i=0;i<4;i++){const w=s*(3.4-i*.7);fx.fillRect(x-w/2,gy-s*2.2-i*s*1.05,w,s*1.05)}}
+let ft=0,pmx=.5,pmy=.5;
+addEventListener('pointermove',e=>{pmx=e.clientX/innerWidth;pmy=e.clientY/innerHeight});
+const leaves=Array.from({length:12},()=>({x:Math.random(),y:Math.random(),sp:.03+.04*Math.random(),ph:Math.random()*6.28,s:1+Math.random()*1.4}));
+function forestLoop(){
+ requestAnimationFrame(forestLoop);ft+=1/60;
+ fx.fillStyle='#050d08';fx.fillRect(0,0,FW,FH);
+ const gy=FH*.82,ox=(pmx-.5);
+ // moon + halo
+ const mxp=FW*.78-ox*8;
+ fx.fillStyle='rgba(200,245,221,.06)';fx.beginPath();fx.arc(mxp,FH*.2,40+Math.sin(ft*.8)*3,0,7);fx.fill();
+ fx.fillStyle='rgba(200,245,221,.12)';fx.beginPath();fx.arc(mxp,FH*.2,26,0,7);fx.fill();
+ fx.fillStyle='#c8f5dd';fx.beginPath();fx.arc(mxp,FH*.2,14,0,7);fx.fill();
+ // god rays from the moon
+ for(let i=0;i<3;i++){
+  const ra=1.15+i*.28+Math.sin(ft*.15+i)*.05;
+  fx.save();fx.translate(mxp,FH*.2);fx.rotate(ra);
+  fx.globalAlpha=.035+.015*Math.sin(ft*.6+i*2);
+  fx.fillStyle='#c8f5dd';fx.beginPath();fx.moveTo(0,0);fx.lineTo(-14-i*8,FH);fx.lineTo(26+i*10,FH);fx.closePath();fx.fill();
+  fx.restore();fx.globalAlpha=1;
+ }
+ // parallax tree layers (mouse-reactive)
+ for(let L=0;L<3;L++){
+  const sp=ft*(L+1)*4+ox*(L+1)*26,sc=5+L*4,col=['#081710','#0c2015','#123122'][L],gap=46+L*30;
+  for(let i=-1;i<FW/gap+2;i++){
+   const xx=Math.floor(i*gap-((sp%gap)+gap)%gap),seed=Math.floor(i+sp/gap);
+   tree(xx+h2(seed,L)*20,gy-(2-L)*8,sc*(0.8+h2(seed,L+9)*.5),col);
+  }
+ }
+ // ground
+ fx.fillStyle='#132a1a';fx.fillRect(0,gy,FW,FH-gy);
+ fx.fillStyle='#0d2013';fx.fillRect(0,gy,FW,2);
+ for(let i=0;i<FW;i+=7){if(h2(i,3)<.3){fx.fillStyle='#1d4028';fx.fillRect(i,gy+4+h2(i,4)*(FH-gy-8),2,2)}}
+ // glowing ground shrooms
+ for(let i=0;i<FW;i+=23){if(h2(i,7)<.14){const a=.3+.2*Math.sin(ft*2+i);
+  fx.fillStyle='rgba(154,107,255,'+(a*.4)+')';fx.beginPath();fx.arc(i+3,gy+8,4,0,7);fx.fill();
+  fx.fillStyle='#9a6bff';fx.fillRect(i+2,gy+7,2,2)}}
+ // walking heroes
+ for(const w of walkers){
+  w.x+=w.sp/60;const px=Math.floor((w.x)%(FW+60))-30,bob=Math.sin(ft*7+w.off)*1;
+  fx.save();fx.translate(px,gy-14+bob);fx.drawImage(w.spr,-7,-8);fx.restore();
+ }
+ // drifting fog bands
+ for(let i=0;i<3;i++){
+  const fw2=FW*.7,fxp=((ft*(3+i*2)+i*160)%(FW+fw2))-fw2/2,fyp=gy-8-i*16+Math.sin(ft*.3+i)*4;
+  const gr=fx.createRadialGradient(fxp,fyp,0,fxp,fyp,fw2/2);
+  gr.addColorStop(0,'rgba(140,190,160,.07)');gr.addColorStop(1,'rgba(140,190,160,0)');
+  fx.fillStyle=gr;fx.beginPath();fx.ellipse(fxp,fyp,fw2/2,14+i*7,0,0,7);fx.fill();
+ }
+ // falling leaves
+ for(const l of leaves){
+  l.y+=l.sp/60;if(l.y>1)l.y=-.05;
+  const lx=(l.x+Math.sin(ft*.7+l.ph)*.04)*FW,ly=l.y*FH;
+  fx.fillStyle='rgba(82,242,165,'+(.25+.15*Math.sin(ft*3+l.ph))+')';
+  fx.save();fx.translate(lx,ly);fx.rotate(ft*1.5+l.ph);fx.fillRect(-l.s/2,-l.s/2,l.s,l.s*.6);fx.restore();
+ }
+ // fireflies (glow halos)
+ for(const f of flies){
+  const fxp=(f.x+Math.sin(ft*f.sp+f.ph)*.02)*FW,fyp=(f.y+Math.cos(ft*f.sp*.8+f.ph)*.03)*gy;
+  const a=.35+Math.sin(ft*2+f.ph)*.3;
+  fx.fillStyle='rgba(82,242,165,'+(a*.25)+')';fx.beginPath();fx.arc(fxp,fyp,3,0,7);fx.fill();
+  fx.fillStyle='rgba(82,242,165,'+a+')';fx.fillRect(fxp,fyp,1.6,1.6);
+ }
+}
+forestLoop();
+
+/* ===== spore cursor trail ===== */
+(()=>{
+ if(matchMedia('(pointer:coarse)').matches)return;
+ const sc=document.getElementById('spores'),sx=sc.getContext('2d');
+ let SW,SH;const rs=()=>{SW=sc.width=innerWidth;SH=sc.height=innerHeight};addEventListener('resize',rs);rs();
+ const ps=[];let lx=0,ly=0;
+ addEventListener('pointermove',e=>{
+  if(Math.hypot(e.clientX-lx,e.clientY-ly)>14){lx=e.clientX;ly=e.clientY;
+   ps.push({x:e.clientX,y:e.clientY,vx:(Math.random()-.5)*20,vy:-8-Math.random()*16,life:1,s:1+Math.random()*1.6})}
+  if(ps.length>50)ps.shift();
+ });
+ (function sl(){requestAnimationFrame(sl);sx.clearRect(0,0,SW,SH);
+  for(const p of ps){p.life-=.016;p.x+=p.vx/60;p.y+=p.vy/60;p.vy+=4/60;
+   if(p.life<=0)continue;
+   sx.fillStyle='rgba(82,242,165,'+(p.life*.16)+')';sx.beginPath();sx.arc(p.x,p.y,p.s*3,0,7);sx.fill();
+   sx.fillStyle='rgba(180,255,215,'+(p.life*.55)+')';sx.fillRect(p.x,p.y,p.s,p.s)}
+  for(let i=ps.length-1;i>=0;i--)if(ps[i].life<=0)ps.splice(i,1);
+ })();
+})();
+
+/* ===== scroll progress ===== */
+addEventListener('scroll',()=>{
+ const h=document.documentElement;
+ document.getElementById('sprog').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';
+},{passive:true});
+
+/* ===== 3D tilt on cards ===== */
+if(!matchMedia('(pointer:coarse)').matches){
+ document.addEventListener('mousemove',e=>{
+  const c=e.target.closest('.hcard,.feat');
+  document.querySelectorAll('.hcard,.feat').forEach(el=>{if(el!==c)el.style.transform=''});
+  if(!c)return;
+  const r=c.getBoundingClientRect(),rx=((e.clientY-r.top)/r.height-.5)*-7,ry=((e.clientX-r.left)/r.width-.5)*7;
+  c.style.transform='perspective(700px) rotateX('+rx+'deg) rotateY('+ry+'deg) translateY(-6px)';
+ });
+ document.addEventListener('mouseleave',()=>document.querySelectorAll('.hcard,.feat').forEach(el=>el.style.transform=''),true);
+}
+
+/* ===== boss showcase ===== */
+(()=>{const c=document.getElementById('bossCv'),spr=makeSpr(SPR_BOSS);
+ c.width=spr.width;c.height=spr.height;const x=c.getContext('2d');
+ let t=0;(function bl(){requestAnimationFrame(bl);t+=1/60;
+  x.clearRect(0,0,c.width,c.height);
+  x.save();x.translate(0,Math.round(Math.sin(t*2.2)*1.2));x.drawImage(spr,0,0);x.restore();})();
+})();
+
+/* ===== hero class cards ===== */
+const CLASSDATA=[
+ {nm:'WITCH',role:'HOMING HEXBOLTS',hp:60,dmg:75,spd:90},
+ {nm:'HUNTER',role:'PIERCING SHOTS',hp:68,dmg:88,spd:80},
+ {nm:'KNIGHT',role:'ORBIT BLADES',hp:90,dmg:70,spd:66},
+ {nm:'MECHA',role:'SPLASH ROCKETS',hp:100,dmg:95,spd:52},
+ {nm:'REAPER',role:'SOUL SCYTHE SWEEPS',hp:72,dmg:82,spd:75},
+ {nm:'DRUID',role:'LIVING THORN AURA',hp:82,dmg:68,spd:70},
+ {nm:'FROSTBORN',role:'CHILLING FROST SHARDS',hp:70,dmg:72,spd:72},
+ {nm:'PYROMANCER',role:'SEARING FLAME CONE',hp:62,dmg:92,spd:74},
+ {nm:'STORMCALLER',role:'CHAIN LIGHTNING',hp:58,dmg:90,spd:79},
+ {nm:'VAMPIRE',role:'LIFESTEAL DAGGERS',hp:66,dmg:78,spd:83},
+];
+const hg=document.getElementById('heroGrid');
+CLASSDATA.forEach((d,i)=>{
+ const el=document.createElement('div');el.className='hcard reveal';
+ const cv=document.createElement('canvas');const spr=makeSpr(SPR_HERO[i]);
+ cv.width=spr.width;cv.height=spr.height;
+ el.appendChild(cv);
+ el.innerHTML+='<h3>'+d.nm+'</h3><div class="role">'+d.role+'</div>'
+  +'<div class="statbar"><span class="lbl">HP</span><div class="bar"><div class="fill" data-w="'+d.hp+'"></div></div></div>'
+  +'<div class="statbar"><span class="lbl">DMG</span><div class="bar"><div class="fill" data-w="'+d.dmg+'"></div></div></div>'
+  +'<div class="statbar"><span class="lbl">SPD</span><div class="bar"><div class="fill" data-w="'+d.spd+'"></div></div></div>'
+  +'<div class="earn good">EARNS $ROOT · UP TO 450%</div>';
+ // re-draw canvas (innerHTML+= wipes it)
+ const cv2=el.querySelector('canvas');const x2=cv2.getContext('2d');x2.imageSmoothingEnabled=false;
+ let t=Math.random()*6;(function anim(){requestAnimationFrame(anim);t+=1/60;
+  x2.clearRect(0,0,cv2.width,cv2.height);
+  x2.save();x2.translate(0,Math.round(Math.sin(t*4)));x2.drawImage(spr,0,0);x2.restore()})();
+ hg.appendChild(el);
+});
+// the drifter card
+(()=>{
+ const el=document.createElement('div');el.className='hcard drifter reveal';
+ const spr=makeSpr(SPR_HERO[0]);
+ el.innerHTML='<canvas></canvas><h3 style="color:#9ca3af">THE DRIFTER</h3><div class="role">FREE · NOT AN NFT</div>'
+  +'<div class="statbar"><span class="lbl">HP</span><div class="bar"><div class="fill" data-w="34" style="background:#f87171"></div></div></div>'
+  +'<div class="statbar"><span class="lbl">DMG</span><div class="bar"><div class="fill" data-w="30" style="background:#f87171"></div></div></div>'
+  +'<div class="statbar"><span class="lbl">SPD</span><div class="bar"><div class="fill" data-w="55" style="background:#f87171"></div></div></div>'
+  +'<div class="earn bad">EARNS ALMOST NOTHING · 5%</div>';
+ const cv=el.querySelector('canvas');cv.width=spr.width;cv.height=spr.height;
+ const x=cv.getContext('2d');x.imageSmoothingEnabled=false;x.filter='grayscale(.9) brightness(.7)';x.drawImage(spr,0,0);
+ hg.appendChild(el);
+})();
+
+/* ===== summon simulator ===== */
+const NM_A=['UMBRA','THORN','MOSS','ASH','FERN','GRIM','NIGHT','WISP','ROOT','SAGE','ELDER','BRIAR'];
+const NM_B=['WALKER','FANG','BLOOM','SHADE','WARD','HOWL','SEED','VEIL','BANE','HEART','CLAW','SONG'];
+const RAR=[
+ {nm:'COMMON',c:'#9ca3af',g:0,earn:'100%'},
+ {nm:'UNCOMMON',c:'#4ade80',g:1,earn:'130%'},
+ {nm:'RARE',c:'#60a5fa',g:2,earn:'170%'},
+ {nm:'SUPER RARE',c:'#22d3ee',g:3,earn:'220%'},
+ {nm:'EPIC',c:'#9a6bff',g:4,earn:'300%'},
+ {nm:'LEGENDARY',c:'#f2c94c',g:5,earn:'450%'}];
+const BON=['+dmg','+HP','+speed','+luck','+area','+atk rate'];
+let pulls=0,got=[0,0,0,0,0,0],simBusy=false;
+function simSummon(){
+ if(simBusy)return;simBusy=true;
+ const stage=document.getElementById('simStage'),portal=document.getElementById('simPortal');
+ stage.innerHTML='<div class="sim-idle">forging signature on the nightchain…</div>';
+ const p2=document.createElement('div');p2.className='sim-portal charging';p2.innerHTML='<span>⬢</span>';stage.appendChild(p2);
+ setTimeout(()=>{
+  pulls++;
+  const roll=Math.random();
+  const rar=roll<.03?5:roll<.09?4:roll<.19?3:roll<.35?2:roll<.60?1:0;got[rar]++;
+  const cls=Math.floor(Math.random()*10);
+  const hue=Math.floor(Math.random()*360);
+  const nm=NM_A[Math.floor(Math.random()*12)]+' '+NM_B[Math.floor(Math.random()*12)];
+  const nb=1+rar;const bs=[...BON].sort(()=>Math.random()-.5).slice(0,nb).join(' · ');
+  const R=RAR[rar];
+  stage.innerHTML='';
+  const card=document.createElement('div');card.className='sim-card g'+rar;
+  const spr=makeSpr(SPR_HERO[cls],hue);
+  const cv=document.createElement('canvas');cv.width=spr.width;cv.height=spr.height;
+  cv.getContext('2d').drawImage(spr,0,0);
+  card.appendChild(cv);
+  const info=document.createElement('div');
+  info.innerHTML='<div class="snm">'+nm+'</div><div class="srar" style="color:'+R.c+'">'+R.nm+' · '+['WITCH','HUNTER','KNIGHT','MECHA','REAPER','DRUID','FROSTBORN','PYROMANCER','STORMCALLER','VAMPIRE'][cls]+'</div>'
+   +'<div class="sbon">'+bs+'<br><span style="color:'+R.c+'">$ROOT rate: '+R.earn+'</span></div>';
+  card.appendChild(info);
+  stage.appendChild(card);
+  document.getElementById('simCount').textContent=pulls+' summons — '+got[0]+' common · '+got[1]+' uncommon · '+got[2]+' rare · '+got[3]+' super rare · '+got[4]+' epic · '+got[5]+' legendary';
+  simBusy=false;
+ },900);
+}
+
+/* ===== FAQ ===== */
+const FAQS=[
+ ['Is NIGHTROOT free to play?','Yes. The demo is fully playable for free with <b>The Drifter</b> — a frail wanderer who earns only 5% $ROOT. To grow stronger and actually earn, summon an NFT hero through your Phantom wallet.'],
+ ['How are NFT heroes generated?','Each summon sends a real transaction on Solana devnet. The transaction <b>signature is hashed</b> into your hero: class, rarity, stat bonuses and palette. It is deterministic, verifiable, and impossible to reroll.'],
+ ['What are the rarity odds?','COMMON 40% · UNCOMMON 25% · RARE 16% · SUPER RARE 10% · EPIC 6% · LEGENDARY 3%. Odds are identical in the Summon Simulator above.'],
+ ['How do I earn $ROOT?','Defeat enemies, loot leaf-coins, and slay Malakhor. Earnings are multiplied by your hero rarity — from 100% (Common) up to 450% (Legendary). The Drifter earns 5%: survival is possible, wealth is not.'],
+ ['Is it easier with an NFT hero?','Noticeably. Every summoned hero gets <b>+20% damage, +15% HP</b> and <b>SECOND ROOT</b> — an automatic revive that detonates everything around you once per run. Higher rarities stack up to ×1.85 power and 6 extra bonuses. The forest stays cruel; you stop being prey.'],
+ ['Is this on mainnet?','Not yet. NIGHTROOT currently lives on <b>Solana devnet</b> — free to test, no real funds involved. Mainnet and the $ROOT TGE arrive in Phase III.'],
+ ['What do I need to play?','A browser. For web3 features: the Phantom wallet extension and free devnet SOL (there is an airdrop button in the game).'],
+ ['Why is it so hard?','Because easy survival games are lies. 27 enemy breeds, hordes every ~40s, snipers, phasing wraiths, exploding thornlings, healing priests, elites with 8× HP — and Malakhor enrages at 30% HP. Every death teaches. Every victory is <b>earned</b> — like $ROOT. (Minting an NFT hero evens the odds considerably.)'],
+];
+const fl=document.getElementById('faqList');
+FAQS.forEach(([q,a])=>{
+ const d=document.createElement('div');d.className='qa';
+ d.innerHTML='<button>'+q+'<span class="pm">+</span></button><div class="ans"><div>'+a+'</div></div>';
+ d.querySelector('button').onclick=()=>{
+  const open=d.classList.contains('open');
+  document.querySelectorAll('.qa.open').forEach(o=>{o.classList.remove('open');o.querySelector('.ans').style.maxHeight=0});
+  if(!open){d.classList.add('open');const an=d.querySelector('.ans');an.style.maxHeight=an.scrollHeight+'px'}
+ };
+ fl.appendChild(d);
+});
+
+/* ===== ticker duplication ===== */
+const tk=document.getElementById('ticker');tk.innerHTML+=tk.innerHTML;
+
+/* ===== scroll reveals + bar/donut triggers ===== */
+const io=new IntersectionObserver(es=>es.forEach(en=>{
+ if(!en.isIntersecting)return;
+ en.target.classList.add('visible');
+ en.target.querySelectorAll('.fill[data-w]').forEach(f=>f.style.width=f.dataset.w+'%');
+ io.unobserve(en.target);
+}),{threshold:.18});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+const dio=new IntersectionObserver(es=>es.forEach(en=>{
+ if(!en.isIntersecting)return;
+ en.target.querySelectorAll('circle').forEach(c=>{
+  const p=+c.dataset.p,o=+(c.dataset.o||0),L=2*Math.PI*80;
+  c.style.strokeDasharray=(p/100*L-3)+' 999';
+  c.style.strokeDashoffset=-(o/100*L);
+ });dio.unobserve(en.target);
+}),{threshold:.4});
+document.querySelectorAll('.donut-wrap').forEach(el=>dio.observe(el));
+</script>
+</body>
+</html>
