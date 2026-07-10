@@ -93,6 +93,7 @@ h1.logo{font-size:clamp(26px,6vw,54px);color:var(--grn);text-shadow:0 0 12px #22
   </div>
   <div class="row">
     <button class="btn pur" id="btnMint">⬢ SUMMON HERO (MINT NFT)</button>
+    <button class="btn pur" id="btnForge">⚒ FORGE NFT</button>
     <button class="btn gold" id="btnShop">🍃 SANCTUM ($ROOT: <span id="seivaT">0</span>)</button>
     <button class="btn" id="btnHow">? HOW TO PLAY</button>
     <button class="btn" id="btnAir">◎ AIRDROP DEVNET</button>
@@ -130,6 +131,26 @@ h1.logo{font-size:clamp(26px,6vw,54px);color:var(--grn);text-shadow:0 0 12px #22
   <button class="btn" id="btnShopX">CLOSE</button>
 </div>
 
+<!-- DIFFICULTY -->
+<div class="modal hidden" id="mdlDiff">
+  <h2>CHOOSE YOUR TRIAL</h2>
+  <div class="upg" id="diffList"></div>
+  <div class="small">harder trials give more $ROOT · your hero spends 1 daily run</div>
+  <button class="btn" id="btnDiffX">CANCEL</button>
+</div>
+
+<!-- FORGE (per-NFT upgrades) -->
+<div class="modal hidden" id="mdlForge">
+  <h2>⚒ HERO FORGE</h2>
+  <div class="panel" style="width:min(480px,92vw)">
+    <div style="text-align:center;color:var(--gld);margin-bottom:8px">$ROOT: <span id="seivaF">0</span></div>
+    <div id="forgeHead" style="text-align:center;margin-bottom:10px"></div>
+    <div id="forgeList"></div>
+    <div class="small" style="margin-top:10px">upgrades bind to this NFT only — permanent & stackable with Sanctum</div>
+  </div>
+  <button class="btn" id="btnForgeX">CLOSE</button>
+</div>
+
 <!-- HOW -->
 <div class="modal hidden" id="mdlHow">
   <h2>HOW TO PLAY</h2>
@@ -141,7 +162,10 @@ h1.logo{font-size:clamp(26px,6vw,54px);color:var(--grn);text-shadow:0 0 12px #22
     ▸ Elites glow red (8× HP, 2.2× damage). At <span style="color:#f0abfc">5:00</span>, MALAKHOR awakens — and enrages below 30% HP.<br>
     ▸ Slay him to save the Worldroot and unlock ENDLESS mode.<br>
     ▸ The free Drifter is frail and earns almost no $ROOT (5% rate). Mint NFT heroes with Phantom (devnet): each on-chain signature forges one of <b>10 classes</b>, <b>6 rarities</b> and up to 6 bonuses — earning up to <b style="color:#fbbf24">450% $ROOT</b>.<br>
-    ▸ <span style="color:#4ade80">NFT heroes fight back:</span> +20% damage, +15% HP and <b>SECOND ROOT</b> — one free revive per run that blasts everything around you.
+    ▸ <span style="color:#4ade80">NFT heroes fight back:</span> +20% damage, +15% HP and <b>SECOND ROOT</b> — one free revive per run that blasts everything around you.<br>
+    ▸ <span style="color:#93c5fd">DAILY RUNS:</span> the free Drifter plays <b>once per day</b>. NFT heroes get <b>up to 3 runs/day</b> by rarity (common 1 · rare 2 · epic+ 3). Runs reset at midnight.<br>
+    ▸ <span style="color:#fbbf24">TRIALS:</span> pick a difficulty each run — WHISPER (easy, 40% $ROOT), DUSK (65%), or NIGHTMARE (hardest, full 100% $ROOT).<br>
+    ▸ <span style="color:#a855f7">FORGE:</span> spend $ROOT to upgrade each NFT individually (damage, HP, speed, attack rate, crit) — stacks on top of the Sanctum's global upgrades.
   </div>
   <button class="btn" id="btnHowX">CLOSE</button>
 </div>
@@ -222,10 +246,35 @@ const SHOP_DEF=[
 ];
 const Meta={d:null,
  load(){try{this.d=JSON.parse(localStorage.getItem('nr_meta'))||null}catch(e){}
-  if(!this.d)this.d={seiva:0,shop:{},best:{time:0,kills:0,win:false}};SHOP_DEF.forEach(s=>{if(!this.d.shop[s.id])this.d.shop[s.id]=0})},
+  if(!this.d)this.d={seiva:0,shop:{},best:{time:0,kills:0,win:false},daily:{date:'',used:{}}};
+  if(!this.d.daily)this.d.daily={date:'',used:{}};
+  SHOP_DEF.forEach(s=>{if(!this.d.shop[s.id])this.d.shop[s.id]=0})},
  save(){localStorage.setItem('nr_meta',JSON.stringify(this.d))},
  cost(s){return Math.floor(s.base*Math.pow(1.6,this.d.shop[s.id]))},
 };
+
+/* ===== DAILY LIMITS · DIFFICULTY · NFT UPGRADES ===== */
+const FREE_PLAYS=1;                 // free Drifter: runs per day
+const PLAYS_BY_RAR=[1,2,2,3,3,3];   // NFT runs per day by rarity index (common..legendary), max 3
+const DIFFS=[
+ {id:'easy',  nm:'WHISPER',  ds:'the forest sleeps · 40% $ROOT', enemyMul:.6, dmgMul:.6, spawnMul:1.4, earnMul:.4,  c:'r1'},
+ {id:'normal',nm:'DUSK',     ds:'a fair hunt · 65% $ROOT',       enemyMul:.8, dmgMul:.8, spawnMul:1.15,earnMul:.65, c:'r3'},
+ {id:'hard',  nm:'NIGHTMARE',ds:'the true Nightwood · 100% $ROOT',enemyMul:1,  dmgMul:1,  spawnMul:1,   earnMul:1,   c:'r5'},
+];
+const NFT_UPG=[
+ {id:'dmg', nm:'BLADE OATH', ds:'+6% damage',      base:120,max:8,mul:1.5},
+ {id:'hp',  nm:'IRONHIDE',   ds:'+18 max HP',      base:100,max:8,mul:1.5},
+ {id:'spd', nm:'SWIFTVEIN',  ds:'+5% speed',       base:110,max:6,mul:1.55},
+ {id:'rate',nm:'FRENZY',     ds:'+5% attack rate', base:140,max:6,mul:1.55},
+ {id:'crit',nm:'DEATHMARK',  ds:'+3% crit chance', base:150,max:6,mul:1.55},
+];
+function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function heroKey(h){return h.starter?'free':(h.sig||h.seed||('h'+(h.ts||0)))}
+function maxPlays(h){return h.starter?FREE_PLAYS:(PLAYS_BY_RAR[h.rar]||1)}
+function ensureDaily(){if(!Meta.d.daily||Meta.d.daily.date!==today()){Meta.d.daily={date:today(),used:{}};Meta.save()}}
+function playsUsed(h){ensureDaily();return Meta.d.daily.used[heroKey(h)]||0}
+function playsLeft(h){return Math.max(0,maxPlays(h)-playsUsed(h))}
+function consumePlay(h){ensureDaily();const k=heroKey(h);Meta.d.daily.used[k]=(Meta.d.daily.used[k]||0)+1;Meta.save()}
 
 /* ============ HEROES / CLASSES ============ */
 const CLASSES=[
@@ -448,7 +497,8 @@ function heroCard(h,noClick){
  const info=document.createElement('div');
  info.innerHTML='<div class="nm">'+h.nm+'</div><div class="rar '+R.c+'">'+R.nm+'</div><div class="st">'+C.nm+'<br>'+C.ds+'<br>'+(st||'—')+'</div>'
   +(h.starter?'<div style="color:#f87171;font-size:7px;margin-top:5px">$ROOT RATE: 5%</div>':'<div style="color:#fbbf24;font-size:7px;margin-top:5px">$ROOT RATE: '+Math.round((RARITIES[h.rar].earn||1)*100)+'%</div>')
-  +(h.sig?'<a target="_blank" href="https://explorer.solana.com/tx/'+h.sig+'?cluster=devnet">⛓ on-chain ↗</a>':'<a>free · not an NFT</a>');
+  +(h.sig?'<a target="_blank" href="https://explorer.solana.com/tx/'+h.sig+'?cluster=devnet">⛓ on-chain ↗</a>':'<a>free · not an NFT</a>')
+  +(noClick?'':'<div class="small" style="margin-top:4px;color:'+(playsLeft(h)>0?'#93c5fd':'#f87171')+'">▶ '+playsLeft(h)+'/'+maxPlays(h)+' runs today</div>');
  d.appendChild(info);
  if(!noClick)d.onclick=()=>{Wallet.sel=allHeroes().indexOf(h);renderHeroes();Au.sfx('click')};
  return d;
@@ -469,6 +519,54 @@ function renderShop(){
   const b=document.createElement('button');b.className='btn gold';b.style.cssText='padding:8px 10px;font-size:8px';
   b.textContent=maxed?'MAX':cost+' 🍃';b.disabled=maxed||Meta.d.seiva<cost;
   b.onclick=()=>{Meta.d.seiva-=cost;Meta.d.shop[s.id]++;Meta.save();Au.sfx('coin');renderShop()};
+  d.appendChild(b);el.appendChild(d);
+ });
+}
+
+/* ---- difficulty select ---- */
+function renderDiff(){
+ const el=$('#diffList');el.innerHTML='';
+ DIFFS.forEach((D,i)=>{
+  const d=document.createElement('div');d.className='card';d.style.cssText='cursor:pointer;max-width:150px';
+  d.innerHTML='<div class="nm '+D.c+'">'+D.nm+'</div><div class="st" style="min-height:auto">'+D.ds+'</div>'
+   +(i===2?'<div class="small" style="color:#fbbf24;margin-top:6px">MAX REWARD</div>':'');
+  if(i===(G.diffSel!=null?G.diffSel:2))d.classList.add('sel');
+  d.onclick=()=>chooseDiff(i);
+  el.appendChild(d);
+ });
+}
+function attemptPlay(){
+ const h=allHeroes()[Wallet.sel]||DEFAULT_HERO;
+ ensureDaily();
+ if(playsLeft(h)<=0){
+  toast('⛔ <b>'+h.nm+'</b> has no runs left today.<br>'+(h.starter?'The free Drifter plays once per day — mint an NFT hero for more.':'Rest until tomorrow, or pick another hero.')+'<br><span class="small">runs reset at midnight</span>',4600);
+  return;
+ }
+ renderDiff();$('#mdlDiff').classList.remove('hidden');Au.sfx('click');
+}
+function chooseDiff(i){
+ G.diffSel=i;$('#mdlDiff').classList.add('hidden');
+ const h=allHeroes()[Wallet.sel]||DEFAULT_HERO;
+ consumePlay(h);startGame();
+}
+
+/* ---- per-NFT forge ---- */
+function openForge(){renderForge();$('#mdlForge').classList.remove('hidden');Au.sfx('click')}
+function renderForge(){
+ const h=allHeroes()[Wallet.sel];
+ $('#seivaF').textContent=Math.floor(Meta.d.seiva);
+ const head=$('#forgeHead'),el=$('#forgeList');el.innerHTML='';
+ if(!h||h.starter){head.innerHTML='<span style="color:#f87171">Pick an NFT hero on the menu to forge.<br>The free Drifter cannot be forged.</span>';return;}
+ h.up=h.up||{};
+ const R=RARITIES[h.rar],C=CLASSES[h.cls];
+ head.innerHTML='<span class="rar '+R.c+'">'+R.nm+'</span> <b>'+h.nm+'</b> · '+C.nm;
+ NFT_UPG.forEach(u=>{
+  const lv=h.up[u.id]||0,cost=Math.floor(u.base*Math.pow(u.mul,lv)),maxed=lv>=u.max;
+  const d=document.createElement('div');d.className='shop-it';
+  d.innerHTML='<div>'+u.nm+' <span class="lv">'+'▮'.repeat(lv)+'▯'.repeat(u.max-lv)+'</span><br><span class="small">'+u.ds+'</span></div>';
+  const b=document.createElement('button');b.className='btn pur';b.style.cssText='padding:8px 10px;font-size:8px';
+  b.textContent=maxed?'MAX':cost+' 🍃';b.disabled=maxed||Meta.d.seiva<cost;
+  b.onclick=()=>{Meta.d.seiva-=cost;h.up[u.id]=lv+1;Meta.save();Wallet.saveHeroes();Au.sfx('coin');renderForge();renderHeroes()};
   d.appendChild(b);el.appendChild(d);
  });
 }
@@ -497,7 +595,7 @@ addEventListener('pointermove',e=>{if(!Input.jbase)return;let dx=e.clientX-Input
 addEventListener('pointerup',()=>{Input.jbase=null;Input.joy=null;$('#joy').style.display='none'});
 
 const G={st:'title',time:0,p:null,enemies:[],bullets:[],ebullets:[],gems:[],coins:[],hearts:[],parts:[],texts:[],
- shake:0,spawnT:0,kills:0,seiva:0,boss:null,endless:false,paused:false,modal:false,eid:0,bossTimer:0,lastStats:null,winShown:false,hordeT:55};
+ shake:0,spawnT:0,kills:0,seiva:0,boss:null,endless:false,paused:false,modal:false,eid:0,bossTimer:0,lastStats:null,winShown:false,hordeT:55,diffSel:2,diff:null};
 let cam={x:0,y:0};
 
 function nearestEnemy(x,y,rge){let best=null,bd=rge*rge;
@@ -610,14 +708,14 @@ const EDEF={
  viper:{spr:'viper',hp:38,spd:92,dmg:20,xp:3,r:6,sc:1.05,charge:true},
  priest:{spr:'priest',hp:56,spd:36,dmg:14,xp:6,r:7,sc:1.2,heal:true},
 };
-function diffMul(){const m=G.time/60;return (1+m*.55+Math.pow(Math.max(0,m-2),1.6)*.22)*(G.endless?1.7+m*.12:1)}
+function diffMul(){const m=G.time/60;return (1+m*.55+Math.pow(Math.max(0,m-2),1.6)*.22)*(G.endless?1.7+m*.12:1)*(G.diff?G.diff.enemyMul:1)}
 function spawnEnemy(type,elite,at){
  if(G.enemies.length>300)return;
  const d=EDEF[type],a=rnd(TAU),p=G.p;
  const rad=Math.max(VW,VH)*.62+rnd(40);
  const e={id:G.eid++,x:at?at.x:p.x+Math.cos(a)*rad,y:at?at.y:p.y+Math.sin(a)*rad,
   type,spr:d.spr,hp:d.hp*diffMul()*(elite?8:1),maxhp:0,spd:d.spd*rnd(.9,1.12),
-  dmg:d.dmg*(elite?2.2:1)*(1+G.time/240),xp:d.xp*(elite?8:1),r:d.r*(elite?1.5:1),sc:d.sc*(elite?1.55:1),
+  dmg:d.dmg*(elite?2.2:1)*(1+G.time/240)*(G.diff?G.diff.dmgMul:1),xp:d.xp*(elite?8:1),r:d.r*(elite?1.5:1),sc:d.sc*(elite?1.55:1),
   err:d.err,charge:d.charge,shoot:d.shoot,ghost:d.ghost,boom:d.boom,split:d.split,heal:d.heal,
   shootCd:rnd(1,2.4),healCd:3,slowT:0,elite,hitT:0,orbCd:0,auraCd:0,cCd:rnd(.8,2),cT:0,wob:rnd(TAU),touch:0};
  e.maxhp=e.hp;G.enemies.push(e);
@@ -626,7 +724,7 @@ function spawnEnemy(type,elite,at){
 function spawnBoss(){
  const p=G.p,a=rnd(TAU),mul=G.endless?1+G.bossKills*.8:1;
  const e={id:G.eid++,x:p.x+Math.cos(a)*320,y:p.y+Math.sin(a)*320,type:'boss',spr:'boss',
-  hp:7000*diffMul()*mul,maxhp:0,spd:54,dmg:42,xp:150,r:17,sc:2.2,boss:true,hitT:0,orbCd:0,auraCd:0,
+  hp:7000*diffMul()*mul,maxhp:0,spd:54,dmg:42*(G.diff?G.diff.dmgMul:1),xp:150,r:17,sc:2.2,boss:true,hitT:0,orbCd:0,auraCd:0,
   t1:3,t2:5.5,t3:4,t4:2.2,dashT:0,dvx:0,dvy:0,touch:0,wob:0,enraged:false};
  e.maxhp=e.hp;G.enemies.push(e);G.boss=e;
  $('#bossbar').style.display='block';Au.sfx('boss');G.shake=8;
@@ -673,8 +771,8 @@ function killEnemy(e){
 function director(dt){
  G.spawnT-=dt;const m=G.time/60;
  if(G.spawnT<=0){
-  G.spawnT=clamp(1.05-m*.14,.26,1.6);
-  const batch=2+Math.floor(m*1.25)+(G.endless?4:0);
+  G.spawnT=clamp(1.05-m*.14,.26,1.6)*(G.diff?G.diff.spawnMul:1);
+  const batch=Math.max(1,Math.round((2+Math.floor(m*1.25)+(G.endless?4:0))*(G.diff?1/G.diff.spawnMul:1)));
   const pool=['slime','slime','bat','toad','spider','crow','swarmling'];
   if(m>=.6)pool.push('shroom','shroom','serpent','crow','swarmling','puff');
   if(m>=1.3)pool.push('wolf','spitter','boar','imp','moth','thornling');
@@ -701,6 +799,7 @@ function director(dt){
 /* ---- start / end ---- */
 function startGame(){
  const h=allHeroes()[Wallet.sel]||DEFAULT_HERO;
+ const D=DIFFS[(G.diffSel!=null?G.diffSel:2)]||DIFFS[2];
  const C=CLASSES[h.cls],R=RARITIES[h.rar],sh=Meta.d.shop,b=h.bonus||{};
  const p={x:0,y:0,r:6,hue:h.hue||0,cls:h.cls,heroNm:h.nm,face:1,anim:0,moving:false,
   maxhp:Math.round((C.hp+(b.hp||0)+sh.hp*20)*R.mul),
@@ -718,15 +817,23 @@ function startGame(){
   lvl:1,xp:0,xpNeed:6,ihit:0,hitCd:0,auraR:0,auraT:0,orbA:0,
   weapons:[{id:C.w,lvl:1,t:0}]};
  if(h.starter){p.maxhp=60;p.dmgMul*=.7;p.spd*=.93;p.luck=Math.max(0,p.luck-.05)}
- else{p.dmgMul*=1.2;p.maxhp=Math.round(p.maxhp*1.15);p.revive=1}
+ else{p.dmgMul*=1.2;p.maxhp=Math.round(p.maxhp*1.15);p.revive=1;
+  const up=h.up||{};
+  p.dmgMul*=(1+(up.dmg||0)*.06);
+  p.maxhp+=(up.hp||0)*18;
+  p.spd*=(1+(up.spd||0)*.05);
+  p.rateMul*=(1+(up.rate||0)*.05);
+  p.crit+=(up.crit||0)*.03;
+ }
+ p.earn*=D.earnMul;
  p.hp=p.maxhp;
- Object.assign(G,{st:'play',time:0,p,enemies:[],bullets:[],ebullets:[],gems:[],coins:[],hearts:[],parts:[],texts:[],
+ Object.assign(G,{st:'play',time:0,p,diff:D,enemies:[],bullets:[],ebullets:[],gems:[],coins:[],hearts:[],parts:[],texts:[],
   shake:0,spawnT:.5,kills:0,seiva:0,boss:null,endless:false,paused:false,modal:false,bossTimer:0,winShown:false,bossKills:0,hordeT:55});
  $('#scrTitle').classList.add('hidden');$('#scrEnd').classList.add('hidden');
  $('#hud').style.display='block';$('#bossbar').style.display='none';
  $('#walletBox').style.display='none';
  Au.init();Au.sfx('lvl');
- toast(p.earn<1?'Survive! Malakhor awakens at <b>5:00</b><br><span style="color:#f87171">The Drifter earns only 5% $ROOT — mint an NFT hero!</span>':'Survive! Malakhor awakens at <b>5:00</b>',4000);
+ toast('<span class="'+D.c+'">'+D.nm+'</span> — Survive! Malakhor awakens at <b>5:00</b>'+(p.earn<1?'<br><span style="color:#f87171">low $ROOT — mint an NFT hero!</span>':''),4000);
 }
 function endGame(win){
  G.st='end';G.lastStats={time:G.time,kills:G.kills,lvl:G.p.lvl,win};
@@ -1095,16 +1202,19 @@ function init(){
  Meta.load();renderHeroes();renderShop();
  const b=Meta.d.best;
  $('#bestTxt').innerHTML=b.time>0?'🏅 best: '+fmtT(b.time)+' · '+b.kills+' kills'+(b.win?' · 🏆 Worldroot saved':''):'';
- $('#btnPlay').onclick=()=>{Au.init();startGame()};
+ $('#btnPlay').onclick=()=>{Au.init();attemptPlay()};
  $('#btnConnect').onclick=()=>{Au.init();Wallet.connect()};
  $('#btnMint').onclick=()=>{Au.init();Wallet.mint()};
+ $('#btnForge').onclick=()=>{Au.init();openForge()};
+ $('#btnForgeX').onclick=()=>$('#mdlForge').classList.add('hidden');
+ $('#btnDiffX').onclick=()=>$('#mdlDiff').classList.add('hidden');
  $('#btnAir').onclick=()=>Wallet.airdrop();
  $('#btnShop').onclick=()=>{renderShop();$('#mdlShop').classList.remove('hidden');Au.sfx('click')};
  $('#btnShopX').onclick=()=>{$('#mdlShop').classList.add('hidden');renderShop()};
  $('#btnHow').onclick=()=>$('#mdlHow').classList.remove('hidden');
  $('#btnHowX').onclick=()=>$('#mdlHow').classList.add('hidden');
  $('#btnMintX').onclick=()=>$('#mdlMint').classList.add('hidden');
- $('#btnAgain').onclick=()=>startGame();
+ $('#btnAgain').onclick=()=>attemptPlay();
  $('#btnMenu').onclick=()=>showTitle();
  $('#btnChain').onclick=()=>{if(G.lastStats)Wallet.recordScore(G.lastStats)};
  // silent reconnect
