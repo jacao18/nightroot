@@ -286,18 +286,18 @@ footer{border-top:1px solid var(--line);padding:56px clamp(18px,5vw,64px) 40px;b
 <nav>
  <div class="logo" onclick="location.href='#top'">NIGHT<em>ROOT</em></div>
  <div class="nav-links">
-  <a href="#story">Story</a><a href="#heroes">Heroes</a><a href="#summon">Summon</a>
+  <a href="#why">Why</a><a href="#story">Story</a><a href="#heroes">Heroes</a><a href="#summon">Summon</a>
   <a href="#root">$ROOT</a><a href="#roadmap">Roadmap</a><a href="whitepaper.html">Whitepaper</a>
  </div>
  <div style="display:flex;gap:12px;align-items:center">
-  <a class="btn solid" href="NIGHTROOT.html">▶ Play Now</a>
+  <a class="btn solid" href="NIGHTROOT.html">▶ Play Demo</a>
   <button class="burger" onclick="document.querySelector('.mnav').classList.toggle('open')">☰</button>
  </div>
 </nav>
 <div class="mnav" onclick="this.classList.remove('open')">
- <a href="#story">Story</a><a href="#heroes">Heroes</a><a href="#summon">Summon</a>
+ <a href="#why">Why</a><a href="#story">Story</a><a href="#heroes">Heroes</a><a href="#summon">Summon</a>
  <a href="#root">$ROOT</a><a href="#roadmap">Roadmap</a><a href="whitepaper.html">Whitepaper</a>
- <a href="NIGHTROOT.html" style="color:var(--root)">▶ Play Now</a>
+ <a href="NIGHTROOT.html" style="color:var(--root)">▶ Play Demo</a>
 </div>
 
 <header id="top">
@@ -305,10 +305,11 @@ footer{border-top:1px solid var(--line);padding:56px clamp(18px,5vw,64px) 40px;b
  <div class="hero-in">
   <div class="tag"><span class="dot"></span>LIVE ON SOLANA DEVNET</div>
   <h1><span class="l1">THE FOREST</span><span class="l2">REMEMBERS.</span></h1>
-  <p class="hero-sub">A pixel-art survival roguelite where every hero is <b>forged by an on-chain signature</b>.
-   Survive the corrupted woods, face <b>Malakhor</b> at minute five, and earn <b>$ROOT</b> — if your hero is worthy.</p>
+  <p class="hero-sub">A pixel-art survival roguelite where the forest is <b>generated in real time</b> around you
+   and every hero is <b>forged by an on-chain signature</b> — an NFT that <b>upgrades and evolves</b>.
+   Survive the corrupted woods, face <b>Malakhor</b> at minute five, and earn <b>$ROOT</b> on Solana — if your hero is worthy.</p>
   <div class="hero-cta">
-   <a class="btn solid" href="NIGHTROOT.html">▶ Play Free Now</a>
+   <a class="btn solid" href="NIGHTROOT.html">▶ Play Free Demo</a>
    <a class="btn purple" href="#summon">⬢ Try a Summon</a>
    <a class="btn" href="whitepaper.html">Whitepaper</a>
   </div>
@@ -328,7 +329,26 @@ footer{border-top:1px solid var(--line);padding:56px clamp(18px,5vw,64px) 40px;b
  <span>◆ <b>10 CLASSES</b> · <b>6 RARITIES</b> · <b>27 BREEDS</b></span><span>◆ NFT HEROES GET <b>SECOND ROOT</b></span>
  <span>◆ YOU WILL DIE. <b>OFTEN.</b></span><span>◆ HORDES SURGE EVERY <b>40 SECONDS</b></span>
  <span>◆ THE DRIFTER EARNS <b>ALMOST NOTHING</b></span><span>◆ SURVIVE · SUMMON · <b>EARN</b></span>
+ <span>◆ WORLD GENERATED IN <b>REAL TIME</b></span><span>◆ NFTs THAT <b>UPGRADE</b> IN THE FORGE</span>
+ <span>◆ SOLANA SPEED · <b>SUB-CENT FEES</b></span>
 </div></div>
+
+<section id="why">
+ <div class="reveal">
+  <div class="eyebrow">WHY NIGHTROOT</div>
+  <h2>A LIVING WORLD.<br><span class="alt">HEROES THAT EVOLVE.</span></h2>
+  <p class="lead">NIGHTROOT is not another web3 promise. It's a <b>real game</b> — brutal, beautiful and fun —
+   where the world builds itself around you and your NFT grows with every run.</p>
+ </div>
+ <div class="feat-grid">
+  <div class="feat reveal"><div class="ic">🌲</div><h3>World generated in real time</h3><p>The Nightwood is built around you as you move — terrain, glowing flora and ponds are generated live, infinite in every direction, while an <b>AI director</b> orchestrates every horde and surge. No two runs walk the same forest.</p></div>
+  <div class="feat reveal"><div class="ic">⬆️</div><h3>NFTs that upgrade</h3><p>Your hero is not a static JPEG. The <b>Forge</b> binds permanent upgrades to each individual NFT — damage, HP, speed, attack rate, crit — stacking on top of Sanctum boosts. Your NFT evolves with you.</p></div>
+  <div class="feat reveal"><div class="ic">🎮</div><h3>Fun first, earn always</h3><p>A flow-state survival roguelite that's genuinely fun to play — and profitable: every run pays <b>$ROOT</b>, multiplied up to <b>450%</b> by hero rarity. Web3 gaming without the boring part.</p></div>
+  <div class="feat reveal"><div class="ic">◎</div><h3>Powered by Solana</h3><p>Summons and score records confirm in <b>seconds</b> for fractions of a cent. Every hero is forged from a real on-chain signature — verifiable, deterministic, unrepeatable.</p></div>
+  <div class="feat reveal"><div class="ic">🌱</div><h3>Second Root</h3><p>NFT heroes fight harder: <b>+20% damage, +15% HP</b> and one automatic revive per run that detonates everything around you. Rarity scales power up to ×1.85.</p></div>
+  <div class="feat reveal"><div class="ic">🔥</div><h3>Deflationary economy</h3><p>Fixed supply of <b>1B $ROOT</b>. Sanctum upgrades burn 50% of everything spent. $ROOT is earned by surviving — never given away.</p></div>
+ </div>
+</section>
 
 <section id="story">
  <div class="reveal">
@@ -749,6 +769,7 @@ const FAQS=[
  ['How are NFT heroes generated?','Each summon sends a real transaction on Solana devnet. The transaction <b>signature is hashed</b> into your hero: class, rarity, stat bonuses and palette. It is deterministic, verifiable, and impossible to reroll.'],
  ['What are the rarity odds?','COMMON 40% · UNCOMMON 25% · RARE 16% · SUPER RARE 10% · EPIC 6% · LEGENDARY 3%. Odds are identical in the Summon Simulator above.'],
  ['How do I earn $ROOT?','Defeat enemies, loot leaf-coins, and slay Malakhor. Earnings are multiplied by your hero rarity — from 100% (Common) up to 450% (Legendary). The Drifter earns 5%: survival is possible, wealth is not.'],
+ ['Can I upgrade my NFT hero?','Yes — and that is the point. The <b>Hero Forge</b> binds permanent upgrades (damage, HP, speed, attack rate, crit) to each individual NFT, paid in $ROOT and stackable with the Sanctum’s global upgrades. Your hero is a living asset that evolves run after run.'],
  ['Is it easier with an NFT hero?','Noticeably. Every summoned hero gets <b>+20% damage, +15% HP</b> and <b>SECOND ROOT</b> — an automatic revive that detonates everything around you once per run. Higher rarities stack up to ×1.85 power and 6 extra bonuses. The forest stays cruel; you stop being prey.'],
  ['Is this on mainnet?','Not yet. NIGHTROOT currently lives on <b>Solana devnet</b> — free to test, no real funds involved. Mainnet and the $ROOT TGE arrive in Phase III.'],
  ['What do I need to play?','A browser. For web3 features: the Phantom wallet extension and free devnet SOL (there is an airdrop button in the game).'],

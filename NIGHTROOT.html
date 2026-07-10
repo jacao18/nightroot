@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>NIGHTROOT — The Last Seed · Solana Devnet</title>
+<title>NIGHTROOT — The Last Seed · Solana</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
@@ -15,7 +15,10 @@ body{font-family:'Press Start 2P',monospace;color:#d8f3dc;image-rendering:pixela
 canvas#game{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated;background:#0b1f10}
 .crt{position:fixed;inset:0;pointer-events:none;z-index:50;background:repeating-linear-gradient(0deg,rgba(0,0,0,.13) 0 1px,transparent 1px 3px);mix-blend-mode:multiply}
 .vig{position:fixed;inset:0;pointer-events:none;z-index:49;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%)}
-.screen{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:radial-gradient(ellipse at 50% 30%,#0d2b17 0%,#04120a 70%);padding:20px;overflow-y:auto}
+.screen{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:18px;background:radial-gradient(ellipse at 50% 30%,#0d2b17 0%,#04120a 70%);padding:20px;overflow-y:auto}
+/* centraliza quando cabe na tela, mas permite rolar até o topo quando não cabe (fix: muitos NFTs) */
+.screen>:first-child{margin-top:auto}
+.screen>:last-child{margin-bottom:auto}
 .hidden{display:none!important}
 h1.logo{font-size:clamp(26px,6vw,54px);color:var(--grn);text-shadow:0 0 12px #22c55e88,0 4px 0 #052e16;letter-spacing:2px}
 .sub{font-size:clamp(8px,1.4vw,11px);color:#86efac;opacity:.85;text-align:center;line-height:1.8}
@@ -33,10 +36,29 @@ h1.logo{font-size:clamp(26px,6vw,54px);color:var(--grn);text-shadow:0 0 12px #22
 .wallet-box .addr{background:#1e1145;border:2px solid #6d28d9;color:#ddd6fe;padding:8px 10px}
 .wallet-box .sol{background:var(--pnl);border:2px solid var(--brd);color:var(--grn);padding:8px 10px}
 .heroes{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;max-width:900px}
-.card{width:150px;background:var(--pnl);border:2px solid var(--brd);padding:10px;cursor:pointer;text-align:center;position:relative;transition:transform .08s}
+.card{width:150px;background:var(--pnl);border:2px solid var(--rimc,var(--brd));padding:10px;cursor:pointer;text-align:center;position:relative;transition:transform .08s}
 .card:hover{transform:translateY(-4px)}
-.card.sel{border-color:var(--gld);box-shadow:0 0 14px #fbbf2455}
 .card canvas{width:84px;height:96px;image-rendering:pixelated}
+/* ---- visual dos NFTs por raridade ---- */
+.cr0{--rimc:#4b5563;--glowc:#9ca3af;--pvg:rgba(156,163,175,.10)}
+.cr1{--rimc:#2f9e5f;--glowc:#4ade80;--pvg:rgba(74,222,128,.15)}
+.cr2{--rimc:#2f6fd0;--glowc:#60a5fa;--pvg:rgba(96,165,250,.17)}
+.cr3{--rimc:#0e9db8;--glowc:#22d3ee;--pvg:rgba(34,211,238,.19)}
+.cr4{--rimc:#8b3fd9;--glowc:#c084fc;--pvg:rgba(192,132,252,.22);box-shadow:0 0 12px #c084fc33}
+.cr5{--rimc:#c8890e;--glowc:#fbbf24;--pvg:rgba(251,191,36,.24);animation:legend 2.2s ease-in-out infinite}
+@keyframes legend{0%,100%{box-shadow:0 0 14px #fbbf2444}50%{box-shadow:0 0 30px #fbbf2488}}
+.card .pv{position:relative;display:flex;align-items:center;justify-content:center;height:104px;margin:-6px -6px 2px;background:radial-gradient(ellipse at 50% 58%,var(--pvg,transparent),transparent 72%)}
+.card .pv::before{content:'';position:absolute;left:50%;bottom:2px;width:70px;height:10px;transform:translateX(-50%);background:radial-gradient(ellipse,var(--pvg,transparent),transparent 70%)}
+.card .pv canvas{filter:drop-shadow(0 0 5px var(--glowc,transparent));animation:heroFloat 2.6s ease-in-out infinite}
+.cr4 .pv canvas,.cr5 .pv canvas{filter:drop-shadow(0 0 9px var(--glowc))}
+@keyframes heroFloat{50%{transform:translateY(-3px)}}
+.card .stars{font-size:7px;letter-spacing:3px;color:var(--glowc,#9ca3af);text-shadow:0 0 6px var(--glowc,transparent);margin-top:3px;min-height:9px}
+.cr3::after,.cr4::after,.cr5::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.09) 50%,transparent 58%);background-size:280% 100%;animation:sheen 3.2s linear infinite}
+@keyframes sheen{from{background-position:120% 0}to{background-position:-180% 0}}
+.card.sel{border-color:var(--gld);box-shadow:0 0 14px #fbbf2455}
+#mdlMint .card{animation:cardPop .5s cubic-bezier(.2,1.4,.4,1)}
+#mdlMint .card.cr5{animation:cardPop .5s cubic-bezier(.2,1.4,.4,1),legend 2.2s ease-in-out infinite .5s}
+@keyframes cardPop{0%{transform:scale(.3) rotate(-6deg);opacity:0}100%{transform:none;opacity:1}}
 .card .nm{font-size:8px;color:#fff;margin:6px 0;line-height:1.5;min-height:24px}
 .card .rar{font-size:7px;padding:3px 6px;display:inline-block}
 .r0{color:#9ca3af}.r1{color:#4ade80}.r2{color:#60a5fa}.r3{color:#22d3ee}.r4{color:var(--pur)}.r5{color:var(--gld);text-shadow:0 0 8px #fbbf2488}
@@ -58,7 +80,9 @@ h1.logo{font-size:clamp(26px,6vw,54px);color:var(--grn);text-shadow:0 0 12px #22
 #bossbar .bn{font-size:9px;color:#f0abfc;text-align:center;margin-bottom:4px;text-shadow:1px 1px 0 #000}
 #bossfill-w{height:14px;background:#1a032a;border:2px solid #7e22ce}
 #bossfill{height:100%;width:100%;background:linear-gradient(90deg,#7e22ce,#d946ef)}
-.modal{position:fixed;inset:0;z-index:80;background:rgba(2,8,5,.82);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:16px}
+.modal{position:fixed;inset:0;z-index:80;background:rgba(2,8,5,.82);display:flex;align-items:center;justify-content:flex-start;flex-direction:column;gap:16px;padding:16px;overflow-y:auto}
+.modal>:first-child{margin-top:auto}
+.modal>:last-child{margin-bottom:auto}
 .modal h2{color:var(--grn);font-size:clamp(13px,2.4vw,20px);text-shadow:0 0 10px #22c55e66}
 .upg{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
 .upg .card{width:190px;min-height:150px}
@@ -161,7 +185,7 @@ h1.logo{font-size:clamp(26px,6vw,54px);color:var(--grn);text-shadow:0 0 12px #22
     ▸ <span style="color:#f87171">The Nightwood is BRUTAL:</span> hordes surge every ~40s, spitters snipe from range, wraiths phase through the pack.<br>
     ▸ Elites glow red (8× HP, 2.2× damage). At <span style="color:#f0abfc">5:00</span>, MALAKHOR awakens — and enrages below 30% HP.<br>
     ▸ Slay him to save the Worldroot and unlock ENDLESS mode.<br>
-    ▸ The free Drifter is frail and earns almost no $ROOT (5% rate). Mint NFT heroes with Phantom (devnet): each on-chain signature forges one of <b>10 classes</b>, <b>6 rarities</b> and up to 6 bonuses — earning up to <b style="color:#fbbf24">450% $ROOT</b>.<br>
+    ▸ The free Drifter is frail and earns almost no $ROOT (5% rate). Mint NFT heroes with Phantom: each on-chain signature forges one of <b>10 classes</b>, <b>6 rarities</b> and up to 6 bonuses — earning up to <b style="color:#fbbf24">450% $ROOT</b>.<br>
     ▸ <span style="color:#4ade80">NFT heroes fight back:</span> +20% damage, +15% HP and <b>SECOND ROOT</b> — one free revive per run that blasts everything around you.<br>
     ▸ <span style="color:#93c5fd">DAILY RUNS:</span> the free Drifter plays <b>once per day</b>. NFT heroes get <b>up to 3 runs/day</b> by rarity (common 1 · rare 2 · epic+ 3). Runs reset at midnight.<br>
     ▸ <span style="color:#fbbf24">TRIALS:</span> pick a difficulty each run — WHISPER (easy, 40% $ROOT), DUSK (65%), or NIGHTMARE (hardest, full 100% $ROOT).<br>
@@ -326,8 +350,20 @@ function genHero(seed){
 }
 const DEFAULT_HERO={cls:0,rar:0,bonus:{},hue:0,nm:'THE DRIFTER',free:true,starter:true};
 
-/* ============ SOLANA / PHANTOM (DEVNET) ============ */
-const RPC='https://api.devnet.solana.com';
+/* ============ SOLANA / PHANTOM ============ */
+/* ⚙ CONFIG DE REDE — para produção mude NETWORK para 'mainnet-beta' e
+   configure um RPC dedicado (Helius/QuickNode/Triton). Veja PRODUCAO-CHECKLIST.md */
+const NETWORK='devnet'; // 'devnet' | 'mainnet-beta'
+const RPCS={
+ 'devnet':'https://api.devnet.solana.com',
+ 'mainnet-beta':'https://api.mainnet-beta.solana.com' // ← troque por seu RPC pago em produção
+};
+const RPC=RPCS[NETWORK];
+const IS_DEVNET=NETWORK==='devnet';
+const EXPLORER_Q=IS_DEVNET?'?cluster=devnet':'';
+const explorerTx=sig=>'https://explorer.solana.com/tx/'+sig+EXPLORER_Q;
+/* 💰 preço do mint em $ROOT (0 = grátis). Na mainnet com token SPL isso vira transferência/burn on-chain. */
+const MINT_COST_ROOT=25;
 const MEMO_PID='MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr';
 const Wallet={p:null,pub:null,conn:null,heroes:[],sel:0,
  prov(){return (window.phantom&&window.phantom.solana)||(window.solana&&window.solana.isPhantom?window.solana:null)},
@@ -344,7 +380,7 @@ const Wallet={p:null,pub:null,conn:null,heroes:[],sel:0,
    $('#wAddr').textContent='👻 '+this.short();$('#wAddr').classList.remove('hidden');
    $('#wSol').classList.remove('hidden');
    this.loadHeroes();renderHeroes();this.refresh();
-   toast('Wallet connected! Network: <b>DEVNET</b>');
+   toast('Wallet connected! Network: <b>'+NETWORK.toUpperCase()+'</b>');
    p.on&&p.on('disconnect',()=>location.reload());
    return true;
   }catch(e){toast('Connection refused.');return false}
@@ -367,20 +403,24 @@ const Wallet={p:null,pub:null,conn:null,heroes:[],sel:0,
  },
  async mint(){
   if(!this.ok()){toast('Connect Phantom first!');return}
+  if(MINT_COST_ROOT>0&&Meta.d.seiva<MINT_COST_ROOT){
+   toast('⛔ Summoning costs <b style="color:#fbbf24">'+MINT_COST_ROOT+' 🍃 $ROOT</b> — you have '+Math.floor(Meta.d.seiva)+'.<br><span class="small">survive the Nightwood to earn more</span>',4200);
+   return}
   const mdl=$('#mdlMint'),body=$('#mintBody');
   mdl.classList.remove('hidden');$('#btnMintX').classList.add('hidden');
-  body.innerHTML='Sign the transaction in Phantom...<br><br><span class="small">the on-chain signature (devnet) forges class, rarity and bonuses</span>';
+  body.innerHTML='Sign the transaction in Phantom...'+(MINT_COST_ROOT>0?'<br><br><span style="color:#fbbf24" class="small">cost: '+MINT_COST_ROOT+' 🍃 $ROOT</span>':'')+'<br><br><span class="small">the on-chain signature forges class, rarity and bonuses</span>';
   try{
-   const sig=await this.sendMemo('NIGHTROOT:MINT:v1:'+this.pub.toBase58()+':'+Date.now());
+   const sig=await this.sendMemo('NIGHTROOT:MINT:v1:'+this.pub.toBase58()+':'+Date.now()+':cost='+MINT_COST_ROOT);
+   if(MINT_COST_ROOT>0){Meta.d.seiva-=MINT_COST_ROOT;Meta.save()}
    const h=genHero(sig);h.sig=sig;
-   this.heroes.push(h);this.saveHeroes();this.sel=this.heroes.length-1+1;
-   renderHeroes();this.refresh();Au.sfx('mint');
+   this.heroes.push(h);this.saveHeroes();this.sel=this.heroes.length;
+   renderHeroes();renderShop();this.refresh();Au.sfx('mint');
    const R=RARITIES[h.rar],C=CLASSES[h.cls];
    const cv=heroCard(h,true);cv.style.margin='0 auto';
    body.innerHTML='<div style="color:#4ade80;margin-bottom:10px">✦ HERO SUMMONED! ✦</div>';
    body.appendChild(cv);
    const ft=document.createElement('div');
-   ft.innerHTML='<div style="margin-top:10px" class="'+R.c+'">'+R.nm+' · '+C.nm+'</div><a style="color:#818cf8;font-size:8px;display:block;margin-top:12px" target="_blank" href="https://explorer.solana.com/tx/'+sig+'?cluster=devnet">view transaction on Solana Explorer ↗</a>';
+   ft.innerHTML='<div style="margin-top:10px" class="'+R.c+'">'+R.nm+' · '+C.nm+'</div><a style="color:#818cf8;font-size:8px;display:block;margin-top:12px" target="_blank" href="'+explorerTx(sig)+'">view transaction on Solana Explorer ↗</a>';
    body.appendChild(ft);
    if(h.rar===5)toast('🌟 LEGENDARY!!! Absurd luck!');
    else if(h.rar===4)toast('💜 EPIC! A magnificent summon!');
@@ -402,7 +442,7 @@ const Wallet={p:null,pub:null,conn:null,heroes:[],sel:0,
   $('#chainTxt').textContent='signing...';
   try{
    const sig=await this.sendMemo('NIGHTROOT:SCORE:v1:{"t":'+Math.floor(st.time)+',"kills":'+st.kills+',"lvl":'+st.lvl+',"win":'+st.win+'}');
-   $('#chainTxt').innerHTML='score immortalized! <a style="color:#818cf8" target="_blank" href="https://explorer.solana.com/tx/'+sig+'?cluster=devnet">view on Explorer ↗</a>';
+   $('#chainTxt').innerHTML='score immortalized! <a style="color:#818cf8" target="_blank" href="'+explorerTx(sig)+'">view on Explorer ↗</a>';
    this.refresh();Au.sfx('mint');
   }catch(e){$('#chainTxt').textContent='failed: '+(e.message||'').slice(0,80)}
  }
@@ -486,18 +526,19 @@ const Spr={cache:{},
 /* ============ HERO CARDS / TITLE ============ */
 function allHeroes(){return [DEFAULT_HERO,...Wallet.heroes]}
 function heroCard(h,noClick){
- const d=document.createElement('div');d.className='card';
+ const d=document.createElement('div');d.className='card cr'+(h.rar||0);
  const R=RARITIES[h.rar],C=CLASSES[h.cls];
  const spr=Spr.hero(h.cls,h.hue||0);
  const cv=document.createElement('canvas');cv.width=spr.width;cv.height=spr.height;
  const cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;
  cx.drawImage(spr,0,0);
- d.appendChild(cv);
+ const pv=document.createElement('div');pv.className='pv';pv.appendChild(cv);
+ d.appendChild(pv);
  let st='';for(const k in h.bonus){const b=BONI.find(b=>b.id===k);st+=b.nm.replace('+%','+'+h.bonus[k]+'%').replace('+HP','+'+h.bonus[k]+' HP')+'<br>'}
  const info=document.createElement('div');
- info.innerHTML='<div class="nm">'+h.nm+'</div><div class="rar '+R.c+'">'+R.nm+'</div><div class="st">'+C.nm+'<br>'+C.ds+'<br>'+(st||'—')+'</div>'
+ info.innerHTML='<div class="nm">'+h.nm+'</div><div class="rar '+R.c+'">'+R.nm+'</div><div class="stars">'+(h.starter?'':'★'.repeat((h.rar||0)+1))+'</div><div class="st">'+C.nm+'<br>'+C.ds+'<br>'+(st||'—')+'</div>'
   +(h.starter?'<div style="color:#f87171;font-size:7px;margin-top:5px">$ROOT RATE: 5%</div>':'<div style="color:#fbbf24;font-size:7px;margin-top:5px">$ROOT RATE: '+Math.round((RARITIES[h.rar].earn||1)*100)+'%</div>')
-  +(h.sig?'<a target="_blank" href="https://explorer.solana.com/tx/'+h.sig+'?cluster=devnet">⛓ on-chain ↗</a>':'<a>free · not an NFT</a>')
+  +(h.sig?'<a target="_blank" href="'+explorerTx(h.sig)+'">⛓ on-chain ↗</a>':'<a>free · not an NFT</a>')
   +(noClick?'':'<div class="small" style="margin-top:4px;color:'+(playsLeft(h)>0?'#93c5fd':'#f87171')+'">▶ '+playsLeft(h)+'/'+maxPlays(h)+' runs today</div>');
  d.appendChild(info);
  if(!noClick)d.onclick=()=>{Wallet.sel=allHeroes().indexOf(h);renderHeroes();Au.sfx('click')};
@@ -1200,6 +1241,8 @@ function showTitle(){
 }
 function init(){
  Meta.load();renderHeroes();renderShop();
+ if(!IS_DEVNET)$('#btnAir').style.display='none'; // sem airdrop na mainnet
+ if(MINT_COST_ROOT>0)$('#btnMint').innerHTML='⬢ SUMMON HERO · '+MINT_COST_ROOT+' 🍃';
  const b=Meta.d.best;
  $('#bestTxt').innerHTML=b.time>0?'🏅 best: '+fmtT(b.time)+' · '+b.kills+' kills'+(b.win?' · 🏆 Worldroot saved':''):'';
  $('#btnPlay').onclick=()=>{Au.init();attemptPlay()};
