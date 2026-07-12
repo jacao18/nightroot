@@ -21,6 +21,18 @@ canvas#game{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixe
 .screen>:last-child{margin-bottom:auto}
 .hidden{display:none!important}
 h1.logo{font-size:clamp(26px,6vw,54px);color:var(--grn);text-shadow:0 0 12px #22c55e88,0 4px 0 #052e16;letter-spacing:2px}
+/* ---- logo da tela-título ---- */
+.title-logo{position:relative;padding:10px 6px 18px;text-shadow:none;animation:logoRise 1s cubic-bezier(.2,.9,.3,1)}
+@keyframes logoRise{0%{opacity:0;transform:translateY(18px) scale(.96);filter:blur(3px)}100%{opacity:1;transform:none;filter:none}}
+.title-logo .lw{color:#eafff2;text-shadow:0 4px 0 #052e16,0 0 18px #22c55e44}
+.title-logo .lr{background:linear-gradient(180deg,#eafff2 0%,#7cf5b0 32%,#22c55e 58%,#0e7a3a 78%,#fbbf24 118%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 4px 0 #052e16) drop-shadow(0 0 10px #22c55e66);animation:logoBreathe 3.4s ease-in-out infinite}
+@keyframes logoBreathe{50%{filter:drop-shadow(0 4px 0 #052e16) drop-shadow(0 0 22px #4ade80cc)}}
+.title-logo::after{content:'';position:absolute;left:6%;right:6%;bottom:4px;height:3px;
+ background:linear-gradient(90deg,transparent,#14532d 12%,#4ade80 35%,#fbbf24 50%,#4ade80 65%,#14532d 88%,transparent);
+ background-size:220% 100%;box-shadow:0 0 14px #4ade8066;animation:rootFlow 5s linear infinite}
+@keyframes rootFlow{to{background-position:-220% 0}}
+.title-logo::before{content:'✦';position:absolute;top:2px;right:-14px;font-size:.32em;color:var(--gld);text-shadow:0 0 10px #fbbf24;animation:seedTwinkle 2.1s ease-in-out infinite}
+@keyframes seedTwinkle{0%,100%{opacity:.25;transform:scale(.8) rotate(0deg)}50%{opacity:1;transform:scale(1.15) rotate(45deg)}}
 .sub{font-size:clamp(8px,1.4vw,11px);color:#86efac;opacity:.85;text-align:center;line-height:1.8}
 .btn{font-family:inherit;font-size:clamp(9px,1.5vw,13px);padding:14px 22px;background:var(--pnl);color:var(--grn);border:2px solid var(--brd);cursor:pointer;text-transform:uppercase;letter-spacing:1px;box-shadow:0 4px 0 #03170c;transition:transform .06s}
 .btn:hover{background:#123724;transform:translateY(-2px)}
@@ -39,23 +51,33 @@ h1.logo{font-size:clamp(26px,6vw,54px);color:var(--grn);text-shadow:0 0 12px #22
 .card{width:150px;background:var(--pnl);border:2px solid var(--rimc,var(--brd));padding:10px;cursor:pointer;text-align:center;position:relative;transition:transform .08s}
 .card:hover{transform:translateY(-4px)}
 .card canvas{width:84px;height:96px;image-rendering:pixelated}
-/* ---- visual dos NFTs por raridade ---- */
-.cr0{--rimc:#4b5563;--glowc:#9ca3af;--pvg:rgba(156,163,175,.10)}
-.cr1{--rimc:#2f9e5f;--glowc:#4ade80;--pvg:rgba(74,222,128,.15)}
-.cr2{--rimc:#2f6fd0;--glowc:#60a5fa;--pvg:rgba(96,165,250,.17)}
-.cr3{--rimc:#0e9db8;--glowc:#22d3ee;--pvg:rgba(34,211,238,.19)}
-.cr4{--rimc:#8b3fd9;--glowc:#c084fc;--pvg:rgba(192,132,252,.22);box-shadow:0 0 12px #c084fc33}
-.cr5{--rimc:#c8890e;--glowc:#fbbf24;--pvg:rgba(251,191,36,.24);animation:legend 2.2s ease-in-out infinite}
-@keyframes legend{0%,100%{box-shadow:0 0 14px #fbbf2444}50%{box-shadow:0 0 30px #fbbf2488}}
-.card .pv{position:relative;display:flex;align-items:center;justify-content:center;height:104px;margin:-6px -6px 2px;background:radial-gradient(ellipse at 50% 58%,var(--pvg,transparent),transparent 72%)}
-.card .pv::before{content:'';position:absolute;left:50%;bottom:2px;width:70px;height:10px;transform:translateX(-50%);background:radial-gradient(ellipse,var(--pvg,transparent),transparent 70%)}
-.card .pv canvas{filter:drop-shadow(0 0 5px var(--glowc,transparent));animation:heroFloat 2.6s ease-in-out infinite}
-.cr4 .pv canvas,.cr5 .pv canvas{filter:drop-shadow(0 0 9px var(--glowc))}
+/* ---- cards NFT por raridade ---- */
+.cr0{--rimc:#6b7484;--glowc:#cfd6e0;--pvg:rgba(207,214,224,.18);--bgA:#1a2028;--bgB:#0b0f15}
+.cr1{--rimc:#2fae66;--glowc:#4ade80;--pvg:rgba(74,222,128,.22);--bgA:#0c2a18;--bgB:#05130a}
+.cr2{--rimc:#3f7de0;--glowc:#60a5fa;--pvg:rgba(96,165,250,.24);--bgA:#0d1e3d;--bgB:#060d1c}
+.cr3{--rimc:#14b3cf;--glowc:#22d3ee;--pvg:rgba(34,211,238,.24);--bgA:#062e39;--bgB:#03161c}
+.cr4{--rimc:#a35bef;--glowc:#c084fc;--pvg:rgba(192,132,252,.26);--bgA:#241040;--bgB:#0f071e;box-shadow:0 0 16px #c084fc44}
+.cr5{--rimc:#e3a416;--glowc:#fbbf24;--pvg:rgba(251,191,36,.28);--bgA:#33220a;--bgB:#150d03;animation:legend 2.2s ease-in-out infinite}
+@keyframes legend{0%,100%{box-shadow:0 0 14px #fbbf2444}50%{box-shadow:0 0 32px #fbbf2499}}
+/* estrutura tipo trading card */
+.card.nft{width:158px;padding:0;overflow:hidden;background:linear-gradient(180deg,var(--bgA),var(--bgB));box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+.card.nft .rbadge{font-size:7px;letter-spacing:2px;padding:7px 4px 6px;color:var(--glowc);text-shadow:0 0 9px var(--glowc);
+ background:linear-gradient(90deg,transparent,var(--pvg) 50%,transparent);border-bottom:1px solid var(--rimc)}
+.card.nft .pv{position:relative;display:flex;align-items:center;justify-content:center;height:112px;
+ background:repeating-linear-gradient(115deg,transparent 0 7px,rgba(255,255,255,.03) 7px 8px),
+ radial-gradient(ellipse at 50% 58%,var(--pvg),transparent 74%)}
+.card.nft .pv::before{content:'';position:absolute;left:50%;bottom:6px;width:76px;height:12px;transform:translateX(-50%);
+ background:radial-gradient(ellipse,var(--pvg),transparent 70%)}
+.card.nft .pv::after{content:'';position:absolute;inset:0;pointer-events:none;
+ background:radial-gradient(circle at 18% 12%,rgba(255,255,255,.07),transparent 34%)}
+.card.nft .pv canvas{position:relative;filter:drop-shadow(0 0 5px var(--glowc));animation:heroFloat 2.6s ease-in-out infinite}
+.cr4 .pv canvas,.cr5 .pv canvas{filter:drop-shadow(0 0 10px var(--glowc))}
 @keyframes heroFloat{50%{transform:translateY(-3px)}}
-.card .stars{font-size:7px;letter-spacing:3px;color:var(--glowc,#9ca3af);text-shadow:0 0 6px var(--glowc,transparent);margin-top:3px;min-height:9px}
-.cr3::after,.cr4::after,.cr5::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.09) 50%,transparent 58%);background-size:280% 100%;animation:sheen 3.2s linear infinite}
+.card.nft .meta{padding:9px 9px 10px;border-top:1px solid var(--rimc);background:rgba(0,0,0,.28)}
+.card.nft .cls{font-size:7px;letter-spacing:1px;color:var(--glowc);margin:5px 0 3px}
+.cr3::after,.cr4::after,.cr5::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.11) 50%,transparent 60%);background-size:280% 100%;animation:sheen 3.4s linear infinite}
 @keyframes sheen{from{background-position:120% 0}to{background-position:-180% 0}}
-.card.sel{border-color:var(--gld);box-shadow:0 0 14px #fbbf2455}
+.card.sel{border-color:var(--gld);box-shadow:0 0 18px #fbbf2466,inset 0 0 0 1px #fbbf2455}
 #mdlMint .card{animation:cardPop .5s cubic-bezier(.2,1.4,.4,1)}
 #mdlMint .card.cr5{animation:cardPop .5s cubic-bezier(.2,1.4,.4,1),legend 2.2s ease-in-out infinite .5s}
 @keyframes cardPop{0%{transform:scale(.3) rotate(-6deg);opacity:0}100%{transform:none;opacity:1}}
@@ -109,7 +131,7 @@ h1.logo{font-size:clamp(26px,6vw,54px);color:var(--grn);text-shadow:0 0 12px #22
 
 <!-- TITLE -->
 <div class="screen" id="scrTitle">
-  <h1 class="logo">NIGHTROOT</h1>
+  <h1 class="logo title-logo"><span class="lw">NIGHT</span><span class="lr">ROOT</span></h1>
   <div class="sub">THE LAST SEED · a 100% web3 survival roguelite on SOLANA<br>Malakhor the Corrupted hungers for the Worldroot. Survive until the reckoning.</div>
   <div class="heroes" id="heroList"></div>
   <div class="row">
@@ -526,8 +548,11 @@ const Spr={cache:{},
 /* ============ HERO CARDS / TITLE ============ */
 function allHeroes(){return [DEFAULT_HERO,...Wallet.heroes]}
 function heroCard(h,noClick){
- const d=document.createElement('div');d.className='card cr'+(h.rar||0);
+ const d=document.createElement('div');d.className='card nft cr'+(h.rar||0);
  const R=RARITIES[h.rar],C=CLASSES[h.cls];
+ const bd=document.createElement('div');bd.className='rbadge';
+ bd.textContent=h.starter?'— FREE HERO —':'◆ '+R.nm+' ◆';
+ d.appendChild(bd);
  const spr=Spr.hero(h.cls,h.hue||0);
  const cv=document.createElement('canvas');cv.width=spr.width;cv.height=spr.height;
  const cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;
@@ -535,11 +560,9 @@ function heroCard(h,noClick){
  const pv=document.createElement('div');pv.className='pv';pv.appendChild(cv);
  d.appendChild(pv);
  let st='';for(const k in h.bonus){const b=BONI.find(b=>b.id===k);st+=b.nm.replace('+%','+'+h.bonus[k]+'%').replace('+HP','+'+h.bonus[k]+' HP')+'<br>'}
- const info=document.createElement('div');
- info.innerHTML='<div class="nm">'+h.nm+'</div><div class="rar '+R.c+'">'+R.nm+'</div><div class="stars">'+(h.starter?'':'★'.repeat((h.rar||0)+1))+'</div><div class="st">'+C.nm+'<br>'+C.ds+'<br>'+(st||'—')+'</div>'
-  +(h.starter?'<div style="color:#f87171;font-size:7px;margin-top:5px">$ROOT RATE: 5%</div>':'<div style="color:#fbbf24;font-size:7px;margin-top:5px">$ROOT RATE: '+Math.round((RARITIES[h.rar].earn||1)*100)+'%</div>')
-  +(h.sig?'<a target="_blank" href="'+explorerTx(h.sig)+'">⛓ on-chain ↗</a>':'<a>free · not an NFT</a>')
-  +(noClick?'':'<div class="small" style="margin-top:4px;color:'+(playsLeft(h)>0?'#93c5fd':'#f87171')+'">▶ '+playsLeft(h)+'/'+maxPlays(h)+' runs today</div>');
+ const info=document.createElement('div');info.className='meta';
+ info.innerHTML='<div class="nm">'+h.nm+'</div><div class="cls">'+C.nm+'</div><div class="st">'+C.ds+'<br>'+(st||'—')+'</div>'
+  +(noClick?'':'<div class="small" style="margin-top:5px;color:'+(playsLeft(h)>0?'#93c5fd':'#f87171')+'">▶ '+playsLeft(h)+'/'+maxPlays(h)+' runs today</div>');
  d.appendChild(info);
  if(!noClick)d.onclick=()=>{Wallet.sel=allHeroes().indexOf(h);renderHeroes();Au.sfx('click')};
  return d;
