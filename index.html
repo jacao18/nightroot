@@ -278,6 +278,91 @@ footer{border-top:1px solid var(--line);padding:56px clamp(18px,5vw,64px) 40px;b
 .brutal .bstat .n{font-family:'Press Start 2P';font-size:15px;color:#f87171}
 .brutal .bstat .t{font-size:10.5px;color:var(--mut);letter-spacing:.14em;text-transform:uppercase;margin-top:8px}
 </style>
+<style>
+/* ============ PIXEL SKIN — mesmo aspecto da página do jogo ============ */
+:root{
+ --void:#020805;--root:#4ade80;--relic:#fbbf24;--corrupt:#c084fc;
+ --ink:#d8f3dc;--mut:#9ddcb0;--panel:#0a1f12;--line:#1f5c38;
+}
+body{font-family:'Press Start 2P',monospace;font-size:10px;line-height:2;color:var(--ink)}
+/* scanlines CRT + vinheta — idênticas ao jogo */
+body::after{opacity:1;background:repeating-linear-gradient(0deg,rgba(0,0,0,.13) 0 1px,transparent 1px 3px);mix-blend-mode:multiply}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1999;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%)}
+/* tipografia pixel */
+h1,h2,h3,h4,.disp,.logo{font-family:'Press Start 2P',monospace!important;font-weight:400!important}
+h1{font-size:clamp(22px,5vw,50px);line-height:1.45;letter-spacing:2px}
+h1 .l1{color:var(--ink);text-shadow:0 4px 0 #052e16}
+h1 .l2{-webkit-text-stroke:0;color:var(--root);text-shadow:0 0 16px #22c55e88,0 4px 0 #052e16}
+h2{font-size:clamp(13px,2.4vw,22px);line-height:1.8;letter-spacing:1px;text-shadow:0 0 10px #22c55e33}
+.hero-sub{font-size:clamp(8px,1.2vw,10px);line-height:2.2;color:var(--mut)}
+.lead{font-size:clamp(8px,1.1vw,10px);line-height:2.2}
+/* nav */
+nav{background:rgba(4,18,10,.88);border-bottom:2px solid var(--line)}
+.logo{font-size:12px;color:var(--ink);text-shadow:0 2px 0 #052e16}
+.logo em{color:var(--root);text-shadow:0 0 12px #22c55e88}
+.logo:hover{animation:none}
+.nav-links{gap:18px}
+.nav-links a{font-family:'Press Start 2P',monospace;font-size:7.5px}
+/* botões estilo jogo (sombra dura + pressed) */
+.btn{font-family:'Press Start 2P',monospace;font-size:9px;padding:13px 18px;border:2px solid var(--line);background:var(--panel);color:var(--root);box-shadow:0 4px 0 #03170c;letter-spacing:1px;transition:transform .06s}
+.btn::before{display:none}
+.btn:hover{background:#123724;color:var(--root);transform:translateY(-2px);box-shadow:0 4px 0 #03170c}
+.btn:active{transform:translateY(2px);box-shadow:none}
+.btn.solid{background:#14532d;color:#fff;border-color:var(--root);animation:btnpulse 1.6s infinite}
+.btn.solid:hover{background:#166534;color:#fff}
+@keyframes btnpulse{0%,100%{box-shadow:0 4px 0 #03170c,0 0 0 #22c55e00}50%{box-shadow:0 4px 0 #03170c,0 0 18px #22c55e66}}
+.btn.gold{color:var(--relic);border-color:#92600a;background:var(--panel)}
+.btn.gold:hover{background:#3a2c07;color:var(--relic)}
+.btn.purple{color:var(--corrupt);border-color:#6b21a8;background:var(--panel)}
+.btn.purple:hover{background:#2a1245;color:var(--corrupt)}
+/* painéis e cards com borda 2px */
+.feat,.hcard,.phase,.tok-item,.sim-wrap,.wp-band,.brutal,.sim-card,.boss-frame{border-width:2px;border-color:var(--line)}
+.feat:hover,.hcard:hover{border-color:var(--root);box-shadow:0 0 18px #22c55e44}
+.feat h3,.phase h3,.wp-band h3,.brutal h3,.hcard h3{font-size:9px;line-height:1.9;letter-spacing:1px}
+.feat p{font-size:7.5px;line-height:2.1}
+.feat .ic{font-size:22px}
+.hcard .role{font-size:7px}
+.statbar{font-size:7px}
+.hcard .earn{font-size:7px}
+.eyebrow{font-size:8px}
+.tag{border-width:2px}
+.hstat .n{font-family:'Press Start 2P',monospace;font-size:clamp(13px,1.9vw,19px);text-shadow:0 0 10px #22c55e66}
+.hstat .t{font-size:6.5px}
+.story-txt p{font-size:8px;line-height:2.2}
+.px-quote{font-size:10px}
+.rtable td{font-size:8px}
+.rr{font-family:'Press Start 2P',monospace!important;font-size:8px!important}
+.rt-earn{font-size:9px}
+.sim-idle{font-size:8px;line-height:2}
+.sim-card .snm{font-family:'Press Start 2P',monospace;font-size:8px;line-height:1.8}
+.sim-card .sbon{font-size:7px;line-height:2}
+.sim-count,.sim-note{font-size:7px;line-height:2}
+.donut-c .s{font-family:'Press Start 2P',monospace;font-size:15px}
+.donut-c .t{font-size:6.5px}
+.tok-item .nm{font-size:8px}
+.tok-item .ds{font-size:6.5px;line-height:1.9}
+.tok-item .pc{font-family:'Press Start 2P',monospace;font-size:10px}
+.loop .st p{font-size:7px;line-height:2}
+.loop .st .px2{font-size:8px}
+.phase li{font-size:7.5px;line-height:2}
+.phase .ph{font-size:7px}
+.wp-band p{font-size:7.5px;line-height:2.1}
+.brutal p{font-size:7.5px;line-height:2.1}
+.brutal .bstat .n{font-size:12px}
+.brutal .bstat .t{font-size:6.5px}
+.qa button{font-family:'Press Start 2P',monospace;font-size:8px;line-height:1.9}
+.qa .ans{font-size:7.5px;line-height:2.2}
+.qa .pm{font-size:10px}
+.foot-links a{font-size:7.5px}
+.foot-links h4{font-size:8px}
+.foot-in .fl p{font-size:7px!important;line-height:2.1}
+.legal{font-size:6.5px;line-height:2.4}
+.mnav a{font-family:'Press Start 2P',monospace;font-size:12px}
+.scroll-hint{font-size:7px}
+.ticker-in span{font-size:9px}
+#sprog{background:linear-gradient(90deg,var(--root),var(--relic))}
+::selection{background:var(--root);color:var(--void)}
+</style>
 </head>
 <body>
 <div id="sprog"></div>

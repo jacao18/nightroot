@@ -98,6 +98,7 @@ h1.logo{font-size:clamp(26px,6vw,54px);color:var(--grn);text-shadow:0 0 12px #22
 #hptxt{font-size:8px;margin-top:4px;color:#fca5a5;text-shadow:1px 1px 0 #000}
 #timer{font-size:clamp(16px,3vw,26px);color:#fff;text-shadow:2px 2px 0 #000,0 0 10px #22c55e55}
 #stats{text-align:right;font-size:9px;line-height:2;color:#fde68a;text-shadow:1px 1px 0 #000}
+#bstats{margin-top:6px;font-size:7px;line-height:2.1;color:#a7f3d0;text-shadow:1px 1px 0 #000;opacity:.92}
 #bossbar{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);width:min(520px,80vw);display:none}
 #bossbar .bn{font-size:9px;color:#f0abfc;text-align:center;margin-bottom:4px;text-shadow:1px 1px 0 #000}
 #bossfill-w{height:14px;background:#1a032a;border:2px solid #7e22ce}
@@ -211,7 +212,9 @@ h1.logo{font-size:clamp(26px,6vw,54px);color:var(--grn);text-shadow:0 0 12px #22
     ▸ <span style="color:#4ade80">NFT heroes fight back:</span> +20% damage, +15% HP and <b>SECOND ROOT</b> — one free revive per run that blasts everything around you.<br>
     ▸ <span style="color:#93c5fd">DAILY RUNS:</span> the free Drifter plays <b>once per day</b>. NFT heroes get <b>up to 3 runs/day</b> by rarity (common 1 · rare 2 · epic+ 3). Runs reset at midnight.<br>
     ▸ <span style="color:#fbbf24">TRIALS:</span> pick a difficulty each run — WHISPER (easy, 40% $ROOT), DUSK (65%), or NIGHTMARE (hardest, full 100% $ROOT).<br>
-    ▸ <span style="color:#a855f7">FORGE:</span> spend $ROOT to upgrade each NFT individually (damage, HP, speed, attack rate, crit) — stacks on top of the Sanctum's global upgrades.
+    ▸ <span style="color:#a855f7">FORGE:</span> spend $ROOT to upgrade each NFT individually (damage, HP, speed, attack rate, crit) — stacks on top of the Sanctum's global upgrades.<br>
+    ▸ <span style="color:#4ade80">RARITY SURGE:</span> every level gained in battle also grants <b>temporary bonus stats</b> for that run (+dmg, +HP, +speed). The higher your hero's rarity, the bigger each surge — watch your live stats on the HUD.<br>
+    ▸ <span style="color:#93c5fd">NFT LEVELS:</span> NFT heroes earn XP from every run and <b>level up permanently</b>. Each NFT level makes your surges 2% stronger. The level shows on the hero card.
   </div>
   <button class="btn" id="btnHowX">CLOSE</button>
 </div>
@@ -231,6 +234,7 @@ h1.logo{font-size:clamp(26px,6vw,54px);color:var(--grn);text-shadow:0 0 12px #22
       <div id="timer">0:00</div>
       <div id="stats"></div>
     </div>
+    <div id="bstats"></div>
   </div>
   <div id="bossbar"><div class="bn">MALAKHOR THE CORRUPTED</div><div id="bossfill-w"><div id="bossfill"></div></div></div>
 </div>
@@ -307,6 +311,28 @@ const DIFFS=[
  {id:'normal',nm:'DUSK',     ds:'a fair hunt · 65% $ROOT',       enemyMul:.8, dmgMul:.8, spawnMul:1.15,earnMul:.65, c:'r3'},
  {id:'hard',  nm:'NIGHTMARE',ds:'the true Nightwood · 100% $ROOT',enemyMul:1,  dmgMul:1,  spawnMul:1,   earnMul:1,   c:'r5'},
 ];
+/* ===== RARITY SURGE · NFT LEVELS =====
+   A cada level ganho NA PARTIDA o herói recebe status temporários (só naquela run),
+   escalando com a raridade. NFTs também ganham XP persistente por run:
+   cada NFT LEVEL deixa os surges 2% mais fortes. */
+const SURGE_BY_RAR=[            // por level na partida: +%dmg · +HP · +%speed
+ {d:1.0,h:4, s:.30},            // common
+ {d:1.4,h:6, s:.40},            // uncommon
+ {d:1.8,h:8, s:.50},            // rare
+ {d:2.3,h:11,s:.65},            // super rare
+ {d:2.9,h:14,s:.80},            // epic
+ {d:3.6,h:18,s:1.0},            // legendary
+];
+const SURGE_FREE={d:.5,h:2,s:.15}; // drifter grátis: surge mínimo
+const nftLevelNeed=l=>60+l*40;     // XP para o próximo NFT level
+function applySurge(p){
+ const s=p.surgeDef;if(!s)return;
+ const m=1+(p.nftLvl||0)*.02;
+ const d=s.d*m,hh=s.h*m,sp=s.s*m;
+ p.dmgMul*=1+d/100;p.maxhp=Math.round(p.maxhp+hh);p.hp=Math.min(p.maxhp,p.hp+hh);p.spd*=1+sp/100;
+ p.surge.lv++;p.surge.d+=d;p.surge.h+=hh;p.surge.s+=sp;
+ G.texts.push({x:p.x+rnd(-4,4),y:p.y-20,v:'⚡SURGE',life:.9,gold:true});
+}
 const NFT_UPG=[
  {id:'dmg', nm:'BLADE OATH', ds:'+6% damage',      base:120,max:8,mul:1.5},
  {id:'hp',  nm:'IRONHIDE',   ds:'+18 max HP',      base:100,max:8,mul:1.5},
@@ -561,7 +587,7 @@ function heroCard(h,noClick){
  d.appendChild(pv);
  let st='';for(const k in h.bonus){const b=BONI.find(b=>b.id===k);st+=b.nm.replace('+%','+'+h.bonus[k]+'%').replace('+HP','+'+h.bonus[k]+' HP')+'<br>'}
  const info=document.createElement('div');info.className='meta';
- info.innerHTML='<div class="nm">'+h.nm+'</div><div class="cls">'+C.nm+'</div><div class="st">'+C.ds+'<br>'+(st||'—')+'</div>'
+ info.innerHTML='<div class="nm">'+h.nm+'</div><div class="cls">'+C.nm+(h.starter?'':' · LV '+((h.nftLvl||0)+1))+'</div><div class="st">'+C.ds+'<br>'+(st||'—')+'</div>'
   +(noClick?'':'<div class="small" style="margin-top:5px;color:'+(playsLeft(h)>0?'#93c5fd':'#f87171')+'">▶ '+playsLeft(h)+'/'+maxPlays(h)+' runs today</div>');
  d.appendChild(info);
  if(!noClick)d.onclick=()=>{Wallet.sel=allHeroes().indexOf(h);renderHeroes();Au.sfx('click')};
@@ -877,6 +903,10 @@ function startGame(){
   regen:(b.regen||0)*.6,
   xpMul:1+(b.xp||0)/100,
   revive:0,
+  surge:{lv:0,d:0,h:0,s:0},
+  surgeDef:h.starter?SURGE_FREE:SURGE_BY_RAR[h.rar],
+  nftLvl:h.nftLvl||0,
+  rarC:h.starter?'r0':R.c,
   earn:h.starter?.05:(RARITIES[h.rar].earn||1),
   lvl:1,xp:0,xpNeed:6,ihit:0,hitCd:0,auraR:0,auraT:0,orbA:0,
   weapons:[{id:C.w,lvl:1,t:0}]};
@@ -893,6 +923,7 @@ function startGame(){
  p.hp=p.maxhp;
  Object.assign(G,{st:'play',time:0,p,diff:D,enemies:[],bullets:[],ebullets:[],gems:[],coins:[],hearts:[],parts:[],texts:[],
   shake:0,spawnT:.5,kills:0,seiva:0,boss:null,endless:false,paused:false,modal:false,bossTimer:0,winShown:false,bossKills:0,hordeT:55});
+ G.heroRef=h;
  $('#scrTitle').classList.add('hidden');$('#scrEnd').classList.add('hidden');
  $('#hud').style.display='block';$('#bossbar').style.display='none';
  $('#walletBox').style.display='none';
@@ -905,12 +936,24 @@ function endGame(win){
  const bt=Meta.d.best;
  if(G.time>bt.time){bt.time=G.time}if(G.kills>bt.kills)bt.kills=G.kills;if(win)bt.win=true;
  Meta.save();
+ // XP persistente do NFT
+ let nftLine='';
+ const hr=G.heroRef;
+ if(hr&&!hr.starter){
+  const gain=Math.round(G.kills/2+G.p.lvl*3+(win?25:0));
+  hr.nxp=(hr.nxp||0)+gain;let ups=0;
+  while(hr.nxp>=nftLevelNeed(hr.nftLvl||0)){hr.nxp-=nftLevelNeed(hr.nftLvl||0);hr.nftLvl=(hr.nftLvl||0)+1;ups++}
+  Wallet.saveHeroes();
+  nftLine='⬆ NFT XP: <b style="color:#93c5fd">+'+gain+'</b>'+(ups?' · <b style="color:#4ade80">LEVEL '+((hr.nftLvl||0)+1)+' REACHED! surges +2% stronger</b>':' · LV '+((hr.nftLvl||0)+1)+' ('+hr.nxp+'/'+nftLevelNeed(hr.nftLvl||0)+' xp)')+'<br>';
+  if(ups){Au.sfx('mint');toast('⬆ <b>'+hr.nm+'</b> reached <b style="color:#4ade80">NFT LEVEL '+((hr.nftLvl||0)+1)+'</b>!',4000)}
+ }
  $('#hud').style.display='none';$('#chainTxt').textContent='';$('#walletBox').style.display='flex';
  $('#endTitle').textContent=win?'THE WORLDROOT IS SAVED!':'YOU FELL...';
  $('#endTitle').style.color=win?'#4ade80':'#ef4444';
  $('#endStats').innerHTML=(win?'MALAKHOR HAS FALLEN!<br><br>':'')+
   '⏱ time: <b>'+fmtT(G.time)+'</b> · ☠ kills: <b>'+G.kills+'</b> · level: <b>'+G.p.lvl+'</b><br>'+
   '🍃 $ROOT earned: <b style="color:#fbbf24">+'+(Math.floor(G.seiva*10)/10)+(win?' (victory bonus included!)':'')+'</b> · earn rate '+Math.round(G.p.earn*100)+'%<br>'+
+  nftLine+
   '<span class="small">best: '+fmtT(bt.time)+' · '+bt.kills+' kills'+(bt.win?' · 🏆 Malakhor slain':'')+'</span>';
  let bc=$('#btnCont');
  if(win){
@@ -927,7 +970,7 @@ function endGame(win){
 /* ---- level up ---- */
 function xpNeed(l){return Math.round(6+l*5+Math.pow(l,1.72))}
 function gainXp(v){const p=G.p;p.xp+=v*(p.xpMul||1);
- while(p.xp>=p.xpNeed){p.xp-=p.xpNeed;p.lvl++;p.xpNeed=xpNeed(p.lvl);openLevelUp()}}
+ while(p.xp>=p.xpNeed){p.xp-=p.xpNeed;p.lvl++;p.xpNeed=xpNeed(p.lvl);applySurge(p);openLevelUp()}}
 const STATUPS=[
  {ic:'💪',nm:'BRUTE FORCE',ds:'+10% damage',fn:p=>p.dmgMul*=1.10},
  {ic:'⏩',nm:'QUICK HANDS',ds:'+8% attack rate',fn:p=>p.rateMul*=1.08},
@@ -1103,6 +1146,9 @@ function updateHud(){
  $('#xptxt').textContent='NV '+p.lvl;
  $('#timer').textContent=fmtT(G.time);
  $('#stats').innerHTML='☠ '+G.kills+'<br>🍃 '+(Math.floor(G.seiva*10)/10);
+ const sg=p.surge;
+ $('#bstats').innerHTML='DMG ×'+p.dmgMul.toFixed(2)+' · SPD '+Math.round(p.spd)+' · CRIT '+Math.round(p.crit*100)+'% · AREA ×'+p.area.toFixed(2)+(p.nftLvl?' · NFT LV'+(p.nftLvl+1):'')
+  +(sg&&sg.lv?'<br><span class="'+(p.rarC||'r0')+'">⚡ SURGE LV'+sg.lv+' → +'+sg.d.toFixed(1)+'% DMG · +'+Math.round(sg.h)+' HP · +'+sg.s.toFixed(1)+'% SPD</span>':'');
 }
 
 /* ---- render ---- */
